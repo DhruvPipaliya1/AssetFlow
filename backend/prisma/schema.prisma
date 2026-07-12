@@ -326,8 +326,8 @@ model Notification {
 
 model ActivityLog {
   id          String   @id @default(cuid())
-  actorUserId String
-  actorUser   User     @relation("ActivityActor", fields: [actorUserId], references: [id])
+  actorUserId String?  // null = system-generated (e.g. overdue cron)
+  actorUser   User?    @relation("ActivityActor", fields: [actorUserId], references: [id])
   action      String
   entityType  String
   entityId    String?

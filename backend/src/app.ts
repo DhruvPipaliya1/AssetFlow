@@ -1,10 +1,15 @@
 import express, { type Express, type Request, type Response } from 'express';
 import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
+import { SETTINGS } from './lib/settings.js';
+import { openapiSpec } from './lib/swagger.js';
+import { errorHandler } from './middleware/error.js';
+import { authRouter } from './modules/auth/auth.routes.js';
 
 export function createApp(): Express {
   const app = express();
 
-  app.use(cors({ origin: process.env.CLIENT_ORIGIN ?? '*' }));
+  app.use(cors({ origin: SETTINGS.clientOrigin }));
   app.use(express.json());
 
   // Health check — used to confirm the API is up.
@@ -12,8 +17,15 @@ export function createApp(): Express {
     res.json({ status: 'ok', service: 'assetflow-backend', ts: new Date().toISOString() });
   });
 
-  // TODO: mount domain modules here — see backend/CLAUDE.md
-  // app.use('/api/auth', authRouter) ...
+  // Interactive API docs (Swagger UI) + raw spec.
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, { customSiteTitle: 'AssetFlow API Docs' }));
+  app.get('/api/docs.json', (_req: Request, res: Response) => res.json(openapiSpec));
+
+  // ── Domain modules (mount new routers here, ABOVE the error handler) ──
+  app.use('/api/auth', authRouter);
+
+  // Error handler MUST be last.
+  app.use(errorHandler);
 
   return app;
 }
