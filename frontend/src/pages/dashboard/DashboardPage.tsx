@@ -61,15 +61,20 @@ export default function DashboardPage() {
   });
   const k = data?.kpis;
 
-  // Greet once with an auto-dismissing toast (has its own close button) — no
-  // persistent banner taking up dashboard space.
+  // Greet once per login session with an auto-dismissing toast — not on every
+  // dashboard visit. Keyed by user id in sessionStorage so a fresh login (or a
+  // different user) is greeted again, but re-navigating here within the session
+  // stays quiet.
   const { notification } = App.useApp();
   const greeted = useRef(false);
   useEffect(() => {
-    if (greeted.current || !data) return;
+    if (greeted.current || !data || !user) return;
+    const key = `af:greeted:${user.id}`;
+    if (sessionStorage.getItem(key)) return;
     greeted.current = true;
+    sessionStorage.setItem(key, '1');
     notification.info({
-      message: `Welcome back, ${user?.name?.split(' ')[0] ?? 'there'}`,
+      message: `Welcome back, ${user.name?.split(' ')[0] ?? 'there'}`,
       description: `Showing ${data.scope === 'ORG' ? 'organization-wide' : 'your department'} figures.`,
       placement: 'topRight',
       duration: 3,

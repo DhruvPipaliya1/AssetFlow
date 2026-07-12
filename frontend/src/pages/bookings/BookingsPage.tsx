@@ -6,7 +6,7 @@ import dayjs, { type Dayjs } from 'dayjs';
 import { bookingsService, type BookingFilters } from '../../services/bookings.service';
 import { assetsService } from '../../services/assets.service';
 import { apiErrorMessage } from '../../services/apiClient';
-import { StatusTag } from '../../components/common';
+import { StatusTag, DetailModal } from '../../components/common';
 import { useAuth } from '../../hooks/useAuth';
 import { PERMISSION } from '../../types/permissions';
 import { BookingStatus } from '../../types/enums';
@@ -23,6 +23,7 @@ export default function BookingsPage() {
   const [filters, setFilters] = useState<BookingFilters>({ page: 1, take: PAGE_SIZE });
   const [formOpen, setFormOpen] = useState(false);
   const [rescheduling, setRescheduling] = useState<Booking | null>(null);
+  const [detail, setDetail] = useState<Booking | null>(null);
   const [calAssetId, setCalAssetId] = useState<string | undefined>();
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
 
@@ -82,7 +83,7 @@ export default function BookingsPage() {
       align: 'right',
       render: (_, b) =>
         b.status === 'UPCOMING' || b.status === 'ONGOING' ? (
-          <Space>
+          <Space onClick={(e) => e.stopPropagation()}>
             <Tooltip title="Reschedule">
               <Button size="small" icon={<EditOutlined />} onClick={() => setRescheduling(b)} />
             </Tooltip>
@@ -122,6 +123,7 @@ export default function BookingsPage() {
         loading={isFetching}
         columns={columns}
         dataSource={data?.items ?? []}
+        onRow={(b) => ({ onClick: () => setDetail(b), style: { cursor: 'pointer' } })}
         pagination={{
           current: filters.page,
           pageSize: PAGE_SIZE,
@@ -212,6 +214,24 @@ export default function BookingsPage() {
 
       <BookingFormModal open={formOpen} onClose={() => setFormOpen(false)} />
       <RescheduleModal booking={rescheduling} onClose={() => setRescheduling(null)} />
+
+      <DetailModal
+        open={!!detail}
+        onClose={() => setDetail(null)}
+        title={detail ? `${detail.asset?.assetTag} — ${detail.asset?.name}` : 'Booking'}
+        items={
+          detail
+            ? [
+                { label: 'Status', value: <StatusTag status={detail.status} /> },
+                { label: 'Booked by', value: detail.bookedByUser?.name },
+                { label: 'On behalf of', value: detail.onBehalfOfDepartment?.name },
+                { label: 'Start', value: dayjs(detail.startTime).format('MMM D, YYYY HH:mm') },
+                { label: 'End', value: dayjs(detail.endTime).format('MMM D, YYYY HH:mm') },
+                { label: 'Created', value: dayjs(detail.createdAt).format('MMM D, YYYY HH:mm') },
+              ]
+            : []
+        }
+      />
     </div>
   );
 }

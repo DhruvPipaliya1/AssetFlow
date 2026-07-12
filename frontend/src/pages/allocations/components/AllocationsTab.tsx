@@ -4,7 +4,7 @@ import { PlusOutlined, RollbackOutlined } from '@ant-design/icons';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { allocationsService, type AllocationFilters } from '../../../services/allocations.service';
-import { StatusTag } from '../../../components/common';
+import { StatusTag, DetailModal } from '../../../components/common';
 import { useAuth } from '../../../hooks/useAuth';
 import { PERMISSION } from '../../../types/permissions';
 import { AllocationStatus } from '../../../types/enums';
@@ -19,6 +19,7 @@ export function AllocationsTab() {
   const [filters, setFilters] = useState<AllocationFilters>({ page: 1, take: PAGE_SIZE });
   const [allocateOpen, setAllocateOpen] = useState(false);
   const [returning, setReturning] = useState<Allocation | null>(null);
+  const [detail, setDetail] = useState<Allocation | null>(null);
 
   const { data, isFetching } = useQuery({
     queryKey: ['allocations', filters],
@@ -49,11 +50,13 @@ export function AllocationsTab() {
       align: 'right',
       render: (_, a) =>
         a.status !== 'RETURNED' && can(PERMISSION.RETURN_APPROVE) ? (
-          <Tooltip title="Return / check-in">
-            <Button size="small" icon={<RollbackOutlined />} onClick={() => setReturning(a)}>
-              Return
-            </Button>
-          </Tooltip>
+          <span onClick={(e) => e.stopPropagation()}>
+            <Tooltip title="Return / check-in">
+              <Button size="small" icon={<RollbackOutlined />} onClick={() => setReturning(a)}>
+                Return
+              </Button>
+            </Tooltip>
+          </span>
         ) : null,
     },
   ];
@@ -80,6 +83,7 @@ export function AllocationsTab() {
         loading={isFetching}
         columns={columns}
         dataSource={data?.items ?? []}
+        onRow={(a) => ({ onClick: () => setDetail(a), style: { cursor: 'pointer' } })}
         pagination={{
           current: filters.page,
           pageSize: PAGE_SIZE,
@@ -91,6 +95,26 @@ export function AllocationsTab() {
 
       <AllocateModal open={allocateOpen} onClose={() => setAllocateOpen(false)} />
       <ReturnModal allocation={returning} onClose={() => setReturning(null)} />
+
+      <DetailModal
+        open={!!detail}
+        onClose={() => setDetail(null)}
+        title={detail ? `${detail.asset?.assetTag} — ${detail.asset?.name}` : 'Allocation'}
+        items={
+          detail
+            ? [
+                { label: 'Status', value: <StatusTag status={detail.status} /> },
+                { label: 'Holder', value: detail.allocatedToUser?.name ?? detail.allocatedToDepartment?.name },
+                { label: 'Allocated by', value: detail.allocatedByUser?.name },
+                { label: 'Allocated at', value: dayjs(detail.allocatedAt).format('MMM D, YYYY HH:mm') },
+                { label: 'Expected return', value: detail.expectedReturnDate ? dayjs(detail.expectedReturnDate).format('MMM D, YYYY') : null },
+                { label: 'Returned at', value: detail.returnedAt ? dayjs(detail.returnedAt).format('MMM D, YYYY HH:mm') : null },
+                { label: 'Return condition', value: detail.returnCondition },
+                { label: 'Check-in notes', value: detail.checkInNotes },
+              ]
+            : []
+        }
+      />
     </div>
   );
 }
