@@ -12,8 +12,12 @@ import {
   Flex,
   Typography,
   Tooltip,
+  List,
+  Empty,
   type MenuProps,
 } from 'antd';
+import { useQuery } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -24,8 +28,10 @@ import {
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useThemeMode } from '../../context/ThemeContext';
+import { useSocketNotifications } from '../../hooks/useSocketNotifications';
 import { navItemsForUser } from '../../config/navigation';
 import { getPageMeta } from '../../config/pageMeta';
+import { notificationsService } from '../../services/notifications.service';
 import { PATHS } from '../../routes/paths';
 import './MainLayout.css';
 
@@ -43,6 +49,14 @@ export function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const pageMeta = getPageMeta(location.pathname);
+
+  // Live notifications: connect the socket + toast, and keep the bell fresh.
+  useSocketNotifications();
+  const { data: notif } = useQuery({
+    queryKey: ['notifications', { take: 6 }],
+    queryFn: () => notificationsService.list({ take: 6 }),
+    refetchInterval: 60_000,
+  });
 
   const menuItems: MenuProps['items'] = navItemsForUser(user!).map((item) => ({
     key: item.key,
@@ -94,14 +108,37 @@ export function MainLayout() {
             <Tooltip title="Toggle theme">
               <Button type="text" aria-label="Toggle theme" icon={<BulbOutlined />} onClick={toggle} />
             </Tooltip>
-            <Badge count={0} size="small">
-              <Button
-                type="text"
-                aria-label="Notifications"
-                icon={<BellOutlined />}
-                onClick={() => navigate(PATHS.notifications)}
-              />
-            </Badge>
+            <Dropdown
+              trigger={['click']}
+              placement="bottomRight"
+              popupRender={() => (
+                <div style={{ width: 320, background: colorBgContainer, borderRadius: 8, boxShadow: 'var(--af-shadow-lg, 0 6px 24px rgba(0,0,0,0.15))', overflow: 'hidden' }}>
+                  <div style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--af-border)' }}>Notifications</div>
+                  {notif?.items.length ? (
+                    <List
+                      dataSource={notif.items}
+                      renderItem={(n) => (
+                        <List.Item style={{ padding: '8px 12px' }}>
+                          <List.Item.Meta
+                            title={<Typography.Text strong={!n.isRead} style={{ fontSize: 13 }}>{n.message}</Typography.Text>}
+                            description={<Typography.Text type="secondary" style={{ fontSize: 11 }}>{dayjs(n.createdAt).format('MMM D, HH:mm')}</Typography.Text>}
+                          />
+                        </List.Item>
+                      )}
+                    />
+                  ) : (
+                    <Empty style={{ padding: 16 }} image={Empty.PRESENTED_IMAGE_SIMPLE} description="No notifications" />
+                  )}
+                  <div style={{ padding: 8, textAlign: 'center', borderTop: '1px solid var(--af-border)' }}>
+                    <Button type="link" size="small" onClick={() => navigate(PATHS.notifications)}>View all</Button>
+                  </div>
+                </div>
+              )}
+            >
+              <Badge count={notif?.unreadCount ?? 0} size="small">
+                <Button type="text" aria-label="Notifications" icon={<BellOutlined />} />
+              </Badge>
+            </Dropdown>
             <Dropdown menu={userMenu} trigger={['click']}>
               <Space style={{ cursor: 'pointer' }}>
                 <Avatar size="small" icon={<UserOutlined />} />

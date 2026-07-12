@@ -11,6 +11,13 @@ import { employeesRouter } from './modules/org/employees/employees.routes.js';
 import { assetsRouter } from './modules/assets/assets.routes.js';
 import { allocationsRouter } from './modules/allocations/allocations.routes.js';
 import { transfersRouter } from './modules/allocations/transfers.routes.js';
+import { bookingsRouter, assetBookingsRouter } from './modules/bookings/bookings.routes.js';
+import { maintenanceRouter } from './modules/maintenance/maintenance.routes.js';
+import { auditCyclesRouter, auditItemsRouter } from './modules/audits/audits.routes.js';
+import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
+import { reportsRouter } from './modules/reports/reports.routes.js';
+import { notificationsRouter } from './modules/notifications/notifications.routes.js';
+import { activityLogRouter } from './modules/activity-log/activity-log.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -33,8 +40,17 @@ export function createApp(): Express {
   app.use('/api/categories', categoriesRouter);
   app.use('/api/employees', employeesRouter);
   app.use('/api/assets', assetsRouter);
+  app.use('/api/assets', assetBookingsRouter); // GET /api/assets/:id/bookings
   app.use('/api/allocations', allocationsRouter);
   app.use('/api/transfers', transfersRouter);
+  app.use('/api/bookings', bookingsRouter);
+  app.use('/api/maintenance', maintenanceRouter);
+  app.use('/api/audit-cycles', auditCyclesRouter);
+  app.use('/api/audit-items', auditItemsRouter);
+  app.use('/api/dashboard', dashboardRouter);
+  app.use('/api/reports', reportsRouter);
+  app.use('/api/notifications', notificationsRouter);
+  app.use('/api/activity-log', activityLogRouter);
 
   // Error handler MUST be last.
   app.use(errorHandler);

@@ -1,5 +1,127 @@
-import { PlaceholderPage } from '../../components/common';
+import { useState } from 'react';
+import { App, Button, Table, Select, Flex, Space, Popconfirm, Tag, type TableProps } from 'antd';
+import { PlusOutlined, CheckOutlined, CloseOutlined, PlayCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { maintenanceService, type MaintenanceFilters } from '../../services/maintenance.service';
+import { apiErrorMessage } from '../../services/apiClient';
+import { StatusTag, WorkflowSteps } from '../../components/common';
+import { useAuth } from '../../hooks/useAuth';
+import { PERMISSION } from '../../types/permissions';
+import { MaintenanceStatus, Priority } from '../../types/enums';
+import type { MaintenanceRequest } from '../../types/models';
+import { RaiseMaintenanceModal } from './components/RaiseMaintenanceModal';
+
+const PAGE_SIZE = 10;
+const STEPS = [
+  { key: 'PENDING', title: 'Pending' },
+  { key: 'APPROVED', title: 'Approved' },
+  { key: 'IN_PROGRESS', title: 'In progress' },
+  { key: 'RESOLVED', title: 'Resolved' },
+];
+const PRIORITY_COLOR: Record<string, string> = { LOW: 'default', MEDIUM: 'blue', HIGH: 'orange', CRITICAL: 'red' };
 
 export default function MaintenancePage() {
-  return <PlaceholderPage title="Maintenance" description="Raise & approve maintenance requests (F8)" />;
+  const qc = useQueryClient();
+  const { can } = useAuth();
+  const { message } = App.useApp();
+  const [filters, setFilters] = useState<MaintenanceFilters>({ page: 1, take: PAGE_SIZE });
+  const [raiseOpen, setRaiseOpen] = useState(false);
+
+  const { data, isFetching } = useQuery({
+    queryKey: ['maintenance', filters],
+    queryFn: () => maintenanceService.list(filters),
+    placeholderData: keepPreviousData,
+  });
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ['maintenance'] });
+    qc.invalidateQueries({ queryKey: ['assets'] });
+    qc.invalidateQueries({ queryKey: ['dashboard'] });
+  };
+
+  const decide = useMutation({
+    mutationFn: ({ id, decision }: { id: string; decision: 'APPROVE' | 'REJECT' }) => maintenanceService.decide(id, decision),
+    onSuccess: (_, { decision }) => { message.success(`Request ${decision === 'APPROVE' ? 'approved' : 'rejected'}`); invalidate(); },
+    onError: (e) => message.error(apiErrorMessage(e)),
+  });
+  const advance = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: 'IN_PROGRESS' | 'RESOLVED' }) => maintenanceService.setStatus(id, status),
+    onSuccess: () => { message.success('Status updated'); invalidate(); },
+    onError: (e) => message.error(apiErrorMessage(e)),
+  });
+
+  const canApprove = can(PERMISSION.MAINTENANCE_APPROVE);
+
+  const columns: TableProps<MaintenanceRequest>['columns'] = [
+    { title: 'Asset', key: 'asset', render: (_, m) => `${m.asset?.assetTag} — ${m.asset?.name}` },
+    { title: 'Issue', dataIndex: 'description', key: 'description', ellipsis: true },
+    { title: 'Priority', key: 'priority', render: (_, m) => <Tag color={PRIORITY_COLOR[m.priority]}>{m.priority}</Tag> },
+    { title: 'Raised by', key: 'by', render: (_, m) => m.raisedByUser?.name ?? '—' },
+    { title: 'Status', key: 'status', render: (_, m) => <StatusTag status={m.status} /> },
+    {
+      title: 'Actions',
+      key: 'actions',
+      align: 'right',
+      render: (_, m) => {
+        if (!canApprove) return null;
+        if (m.status === 'PENDING')
+          return (
+            <Space>
+              <Popconfirm title="Approve? Asset → Under maintenance" onConfirm={() => decide.mutate({ id: m.id, decision: 'APPROVE' })}>
+                <Button size="small" type="primary" icon={<CheckOutlined />}>Approve</Button>
+              </Popconfirm>
+              <Popconfirm title="Reject this request?" onConfirm={() => decide.mutate({ id: m.id, decision: 'REJECT' })}>
+                <Button size="small" danger icon={<CloseOutlined />}>Reject</Button>
+              </Popconfirm>
+            </Space>
+          );
+        if (m.status === 'APPROVED' || m.status === 'TECH_ASSIGNED')
+          return <Button size="small" icon={<PlayCircleOutlined />} onClick={() => advance.mutate({ id: m.id, status: 'IN_PROGRESS' })}>Start work</Button>;
+        if (m.status === 'IN_PROGRESS')
+          return (
+            <Popconfirm title="Mark resolved? Asset → Available" onConfirm={() => advance.mutate({ id: m.id, status: 'RESOLVED' })}>
+              <Button size="small" type="primary" icon={<CheckCircleOutlined />}>Resolve</Button>
+            </Popconfirm>
+          );
+        return null;
+      },
+    },
+  ];
+
+  return (
+    <div>
+      <Flex justify="space-between" align="center" wrap gap={12} style={{ marginBottom: 16 }}>
+        <Space wrap>
+          <Select allowClear placeholder="Status" style={{ width: 170 }}
+            options={Object.values(MaintenanceStatus).map((s) => ({ value: s, label: s.replace(/_/g, ' ') }))}
+            onChange={(v) => setFilters((f) => ({ ...f, status: v, page: 1 }))} />
+          <Select allowClear placeholder="Priority" style={{ width: 140 }}
+            options={Object.values(Priority).map((p) => ({ value: p, label: p }))}
+            onChange={(v) => setFilters((f) => ({ ...f, priority: v, page: 1 }))} />
+        </Space>
+        {can(PERMISSION.MAINTENANCE_RAISE) && (
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setRaiseOpen(true)}>Raise request</Button>
+        )}
+      </Flex>
+
+      <Table<MaintenanceRequest>
+        rowKey="id"
+        loading={isFetching}
+        columns={columns}
+        dataSource={data?.items ?? []}
+        expandable={{
+          expandedRowRender: (m) => <WorkflowSteps steps={STEPS} current={m.status} error={m.status === 'REJECTED'} />,
+        }}
+        pagination={{
+          current: filters.page,
+          pageSize: PAGE_SIZE,
+          total: data?.total ?? 0,
+          showSizeChanger: false,
+          onChange: (page) => setFilters((f) => ({ ...f, page })),
+        }}
+      />
+
+      <RaiseMaintenanceModal open={raiseOpen} onClose={() => setRaiseOpen(false)} />
+    </div>
+  );
 }

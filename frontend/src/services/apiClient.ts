@@ -38,3 +38,13 @@ export function apiErrorMessage(err: unknown, fallback = 'Something went wrong')
   const axiosErr = err as AxiosError<ApiError>;
   return axiosErr?.response?.data?.error?.message ?? fallback;
 }
+
+/** HTTP status of an API error (e.g. 409 for conflicts). */
+export function apiErrorStatus(err: unknown): number | undefined {
+  return (err as AxiosError)?.response?.status;
+}
+
+/** The `details` payload of an API error (e.g. { heldBy, action } on a 409). */
+export function apiErrorDetails<T = unknown>(err: unknown): T | undefined {
+  return (err as AxiosError<ApiError>)?.response?.data?.error?.details as T | undefined;
+}

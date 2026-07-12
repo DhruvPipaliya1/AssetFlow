@@ -11,3 +11,5 @@ export { ConfirmButton } from './ConfirmButton/ConfirmButton';
 export type { ConfirmButtonProps } from './ConfirmButton/ConfirmButton';
 export { PlaceholderPage } from './PlaceholderPage/PlaceholderPage';
 export type { PlaceholderPageProps } from './PlaceholderPage/PlaceholderPage';
+export { WorkflowSteps } from './WorkflowSteps/WorkflowSteps';
+export type { WorkflowStepsProps, WorkflowStepDef } from './WorkflowSteps/WorkflowSteps';
