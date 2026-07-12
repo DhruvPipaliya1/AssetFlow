@@ -9,6 +9,7 @@ import {
   Dropdown,
   Badge,
   Space,
+  Flex,
   Typography,
   Tooltip,
   type MenuProps,
@@ -24,6 +25,7 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { useThemeMode } from '../../context/ThemeContext';
 import { navItemsForUser } from '../../config/navigation';
+import { getPageMeta } from '../../config/pageMeta';
 import { PATHS } from '../../routes/paths';
 import './MainLayout.css';
 
@@ -40,6 +42,7 @@ export function MainLayout() {
   const { toggle } = useThemeMode();
   const navigate = useNavigate();
   const location = useLocation();
+  const pageMeta = getPageMeta(location.pathname);
 
   const menuItems: MenuProps['items'] = navItemsForUser(user!).map((item) => ({
     key: item.key,
@@ -74,13 +77,19 @@ export function MainLayout() {
       </Sider>
       <Layout>
         <Header className="af-header" style={{ background: colorBgContainer }}>
-          <Button
-            type="text"
-            aria-label="Toggle sidebar"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
-            style={{ fontSize: 16, width: 64, height: 64 }}
-          />
+          <Flex align="center" style={{ minWidth: 0 }}>
+            <Button
+              type="text"
+              aria-label="Toggle sidebar"
+              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => setCollapsed(!collapsed)}
+              style={{ fontSize: 16, width: 64, height: 64 }}
+            />
+            <div className="af-page-title">
+              <span className="af-page-title__main">{pageMeta.title}</span>
+              {pageMeta.subtitle && <span className="af-page-title__sub">{pageMeta.subtitle}</span>}
+            </div>
+          </Flex>
           <Space size="middle" style={{ paddingRight: 16 }}>
             <Tooltip title="Toggle theme">
               <Button type="text" aria-label="Toggle theme" icon={<BulbOutlined />} onClick={toggle} />

@@ -49,7 +49,10 @@ export const openapiSpec = swaggerJSDoc({
         },
       },
     },
-    tags: [{ name: 'Auth', description: 'Authentication & session' }],
+    tags: [
+      { name: 'Auth', description: 'Authentication & session' },
+      { name: 'Organization', description: 'Departments, categories & employee directory (Admin setup)' },
+    ],
   },
   // dev runs via tsx from the backend/ dir; picks up every module's routes.
   apis: ['./src/modules/**/*.routes.ts'],

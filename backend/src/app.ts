@@ -5,6 +5,9 @@ import { SETTINGS } from './lib/settings.js';
 import { openapiSpec } from './lib/swagger.js';
 import { errorHandler } from './middleware/error.js';
 import { authRouter } from './modules/auth/auth.routes.js';
+import { departmentsRouter } from './modules/org/departments/departments.routes.js';
+import { categoriesRouter } from './modules/org/categories/categories.routes.js';
+import { employeesRouter } from './modules/org/employees/employees.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -23,6 +26,9 @@ export function createApp(): Express {
 
   // ── Domain modules (mount new routers here, ABOVE the error handler) ──
   app.use('/api/auth', authRouter);
+  app.use('/api/departments', departmentsRouter);
+  app.use('/api/categories', categoriesRouter);
+  app.use('/api/employees', employeesRouter);
 
   // Error handler MUST be last.
   app.use(errorHandler);
