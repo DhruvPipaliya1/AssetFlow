@@ -19,7 +19,14 @@ export type DomainEventType =
   | 'AuditDiscrepancyFlagged'
   | 'RolePromoted'
   | 'TransferRequested'
-  | 'TransferRejected';
+  | 'TransferRejected'
+  | 'BookingRescheduled'
+  | 'MaintenanceResolved'
+  | 'MaintenanceStatusChanged'
+  | 'AuditCycleCreated'
+  | 'AuditorsAssigned'
+  | 'AuditCycleStarted'
+  | 'AuditItemMarked';
 
 export interface DomainEvent {
   type: DomainEventType | string;

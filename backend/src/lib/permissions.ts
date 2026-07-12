@@ -15,7 +15,8 @@ export const PERMISSION = {
   BOOKING_CREATE: 'booking:create',
   AUDIT_MANAGE: 'audit:manage', // create/close cycles
   AUDIT_PERFORM: 'audit:perform',
-  ANALYTICS_VIEW_ALL: 'analytics:viewAll',
+  ANALYTICS_VIEW: 'analytics:view', // dashboard/reports access (dept-scoped or all)
+  ANALYTICS_VIEW_ALL: 'analytics:viewAll', // org-wide scope
 } as const;
 
 export type Permission = (typeof PERMISSION)[keyof typeof PERMISSION];
@@ -34,18 +35,23 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     P.MAINTENANCE_APPROVE,
     P.BOOKING_CREATE,
     P.AUDIT_PERFORM,
+    P.ANALYTICS_VIEW,
     P.ANALYTICS_VIEW_ALL,
   ],
-  // Department Head: scoped to their department via requireScope.
+  // Department Head: scoped to their department via requireScope. Analytics are
+  // dept-scoped (ANALYTICS_VIEW without _ALL).
   DEPARTMENT_HEAD: [
     P.ASSET_ALLOCATE,
     P.TRANSFER_APPROVE,
     P.BOOKING_CREATE,
     P.MAINTENANCE_RAISE,
     P.AUDIT_PERFORM,
+    P.ANALYTICS_VIEW,
   ],
-  // Employee: scoped to their own resources via requireScope.
-  EMPLOYEE: [P.MAINTENANCE_RAISE, P.BOOKING_CREATE],
+  // Employee: scoped to their own resources via requireScope. AUDIT_PERFORM is
+  // granted because the RBAC matrix (§8) lets any role audit *when assigned* —
+  // the "assigned auditors only" service check is the real scope gate.
+  EMPLOYEE: [P.MAINTENANCE_RAISE, P.BOOKING_CREATE, P.AUDIT_PERFORM],
 };
 
 export const hasPermission = (role: Role, perm: Permission): boolean =>
