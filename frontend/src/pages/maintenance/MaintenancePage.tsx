@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { App, Button, Table, Select, Flex, Space, Popconfirm, Tag, type TableProps } from 'antd';
-import { PlusOutlined, CheckOutlined, CloseOutlined, PlayCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { App, Button, Table, Select, Flex, Space, Popconfirm, Tag, Modal, type TableProps } from 'antd';
+import { PlusOutlined, CheckOutlined, CloseOutlined, PlayCircleOutlined, CheckCircleOutlined, UserAddOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { maintenanceService, type MaintenanceFilters } from '../../services/maintenance.service';
+import { employeesService } from '../../services/employees.service';
 import { apiErrorMessage } from '../../services/apiClient';
 import { StatusTag, WorkflowSteps } from '../../components/common';
 import { useAuth } from '../../hooks/useAuth';
@@ -15,10 +16,13 @@ const PAGE_SIZE = 10;
 const STEPS = [
   { key: 'PENDING', title: 'Pending' },
   { key: 'APPROVED', title: 'Approved' },
+  { key: 'TECH_ASSIGNED', title: 'Tech assigned' },
   { key: 'IN_PROGRESS', title: 'In progress' },
   { key: 'RESOLVED', title: 'Resolved' },
 ];
 const PRIORITY_COLOR: Record<string, string> = { LOW: 'default', MEDIUM: 'blue', HIGH: 'orange', CRITICAL: 'red' };
+
+type WorkStatus = 'TECH_ASSIGNED' | 'IN_PROGRESS' | 'RESOLVED';
 
 export default function MaintenancePage() {
   const qc = useQueryClient();
@@ -26,11 +30,20 @@ export default function MaintenancePage() {
   const { message } = App.useApp();
   const [filters, setFilters] = useState<MaintenanceFilters>({ page: 1, take: PAGE_SIZE });
   const [raiseOpen, setRaiseOpen] = useState(false);
+  const [assignFor, setAssignFor] = useState<MaintenanceRequest | null>(null);
+  const [techId, setTechId] = useState<string | undefined>(undefined);
 
   const { data, isFetching } = useQuery({
     queryKey: ['maintenance', filters],
     queryFn: () => maintenanceService.list(filters),
     placeholderData: keepPreviousData,
+  });
+
+  const canApprove = can(PERMISSION.MAINTENANCE_APPROVE);
+  const { data: employees } = useQuery({
+    queryKey: ['employees', 'technicians'],
+    queryFn: () => employeesService.list({ take: '100', status: 'ACTIVE' }),
+    enabled: canApprove,
   });
 
   const invalidate = () => {
@@ -45,18 +58,18 @@ export default function MaintenancePage() {
     onError: (e) => message.error(apiErrorMessage(e)),
   });
   const advance = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'IN_PROGRESS' | 'RESOLVED' }) => maintenanceService.setStatus(id, status),
-    onSuccess: () => { message.success('Status updated'); invalidate(); },
+    mutationFn: ({ id, status, technicianUserId }: { id: string; status: WorkStatus; technicianUserId?: string }) =>
+      maintenanceService.setStatus(id, status, technicianUserId),
+    onSuccess: () => { message.success('Status updated'); setAssignFor(null); setTechId(undefined); invalidate(); },
     onError: (e) => message.error(apiErrorMessage(e)),
   });
-
-  const canApprove = can(PERMISSION.MAINTENANCE_APPROVE);
 
   const columns: TableProps<MaintenanceRequest>['columns'] = [
     { title: 'Asset', key: 'asset', render: (_, m) => `${m.asset?.assetTag} — ${m.asset?.name}` },
     { title: 'Issue', dataIndex: 'description', key: 'description', ellipsis: true },
     { title: 'Priority', key: 'priority', render: (_, m) => <Tag color={PRIORITY_COLOR[m.priority]}>{m.priority}</Tag> },
     { title: 'Raised by', key: 'by', render: (_, m) => m.raisedByUser?.name ?? '—' },
+    { title: 'Technician', key: 'tech', render: (_, m) => m.technicianUser?.name ?? <span className="af-muted">—</span> },
     { title: 'Status', key: 'status', render: (_, m) => <StatusTag status={m.status} /> },
     {
       title: 'Actions',
@@ -75,7 +88,13 @@ export default function MaintenancePage() {
               </Popconfirm>
             </Space>
           );
-        if (m.status === 'APPROVED' || m.status === 'TECH_ASSIGNED')
+        if (m.status === 'APPROVED')
+          return (
+            <Button size="small" icon={<UserAddOutlined />} onClick={() => { setAssignFor(m); setTechId(m.technicianUserId ?? undefined); }}>
+              Assign technician
+            </Button>
+          );
+        if (m.status === 'TECH_ASSIGNED')
           return <Button size="small" icon={<PlayCircleOutlined />} onClick={() => advance.mutate({ id: m.id, status: 'IN_PROGRESS' })}>Start work</Button>;
         if (m.status === 'IN_PROGRESS')
           return (
@@ -122,6 +141,27 @@ export default function MaintenancePage() {
       />
 
       <RaiseMaintenanceModal open={raiseOpen} onClose={() => setRaiseOpen(false)} />
+
+      <Modal
+        open={!!assignFor}
+        title="Assign technician"
+        okText="Assign"
+        onOk={() => assignFor && techId && advance.mutate({ id: assignFor.id, status: 'TECH_ASSIGNED', technicianUserId: techId })}
+        okButtonProps={{ disabled: !techId, loading: advance.isPending }}
+        onCancel={() => { setAssignFor(null); setTechId(undefined); }}
+        destroyOnHidden
+      >
+        <p>Assign a technician to <strong>{assignFor?.asset?.assetTag}</strong>. The request moves to <em>Tech assigned</em>.</p>
+        <Select
+          showSearch
+          optionFilterProp="label"
+          style={{ width: '100%' }}
+          placeholder="Select a technician"
+          value={techId}
+          onChange={setTechId}
+          options={(employees?.items ?? []).map((u) => ({ value: u.id, label: `${u.name} · ${u.role.replace(/_/g, ' ')}` }))}
+        />
+      </Modal>
     </div>
   );
 }

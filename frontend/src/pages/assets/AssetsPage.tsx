@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button, Table, Input, Select, Space, Flex, Tag, Tooltip, type TableProps } from 'antd';
 import { PlusOutlined, EditOutlined, SearchOutlined, QrcodeOutlined } from '@ant-design/icons';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { assetsService, type AssetFilters } from '../../services/assets.service';
 import { categoriesService } from '../../services/categories.service';
+import { departmentsService } from '../../services/departments.service';
 import { StatusTag } from '../../components/common';
 import { useAuth } from '../../hooks/useAuth';
 import { PERMISSION } from '../../types/permissions';
@@ -16,12 +18,28 @@ const PAGE_SIZE = 10;
 
 export default function AssetsPage() {
   const { can } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState<AssetFilters>({ page: 1, take: PAGE_SIZE });
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Asset | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
 
+  // Deep-link: /assets?asset=<id> (from the command palette) opens its detail.
+  const assetParam = searchParams.get('asset');
+  useEffect(() => {
+    if (assetParam) setDetailId(assetParam);
+  }, [assetParam]);
+
+  const closeDetail = () => {
+    setDetailId(null);
+    if (searchParams.has('asset')) {
+      searchParams.delete('asset');
+      setSearchParams(searchParams, { replace: true });
+    }
+  };
+
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: categoriesService.list });
+  const { data: departments = [] } = useQuery({ queryKey: ['departments'], queryFn: departmentsService.list });
   const { data, isFetching } = useQuery({
     queryKey: ['assets', filters],
     queryFn: () => assetsService.list(filters),
@@ -57,13 +75,15 @@ export default function AssetsPage() {
     <div>
       <Flex justify="space-between" align="center" wrap gap={12} style={{ marginBottom: 16 }}>
         <Space wrap>
-          <Input
-            allowClear
-            prefix={<SearchOutlined />}
-            placeholder="Search tag / name / serial"
-            style={{ width: 240 }}
-            onChange={(e) => patch({ q: e.target.value || undefined })}
-          />
+          <Tooltip title="Search by asset tag (from a scanned QR), name or serial number">
+            <Input
+              allowClear
+              prefix={<SearchOutlined />}
+              placeholder="Search tag / QR / name / serial"
+              style={{ width: 260 }}
+              onChange={(e) => patch({ q: e.target.value.trim() || undefined })}
+            />
+          </Tooltip>
           <Select
             allowClear
             placeholder="Category"
@@ -77,6 +97,15 @@ export default function AssetsPage() {
             style={{ width: 170 }}
             options={Object.values(AssetStatus).map((s) => ({ value: s, label: s.replace(/_/g, ' ') }))}
             onChange={(v) => patch({ status: v })}
+          />
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="Department"
+            style={{ width: 170 }}
+            options={departments.map((d) => ({ value: d.id, label: d.name }))}
+            onChange={(v) => patch({ ownerDepartmentId: v })}
           />
           <Select
             allowClear
@@ -109,7 +138,7 @@ export default function AssetsPage() {
       />
 
       <AssetFormModal open={formOpen} editing={editing} onClose={() => setFormOpen(false)} onSaved={() => undefined} />
-      <AssetDetailDrawer assetId={detailId} onClose={() => setDetailId(null)} />
+      <AssetDetailDrawer assetId={detailId} onClose={closeDetail} />
     </div>
   );
 }

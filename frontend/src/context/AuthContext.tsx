@@ -7,17 +7,18 @@ import {
   type ReactNode,
 } from 'react';
 import type { User } from '../types/models';
-import { hasPermission, type Permission } from '../types/permissions';
+import { userCan, type Permission } from '../types/permissions';
 import { authService } from '../services/auth.service';
 import { tokenStore } from '../services/apiClient';
 
 export interface AuthContextValue {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   can: (perm: Permission) => boolean;
+  updateUser: (user: User) => void;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -44,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await authService.login({ email, password });
     tokenStore.set(res.accessToken);
     setUser(res.user);
+    return res.user;
   }, []);
 
   const signup = useCallback(
@@ -62,14 +64,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  const can = useCallback(
-    (perm: Permission) => (user ? hasPermission(user.role, perm) : false),
-    [user],
-  );
+  const can = useCallback((perm: Permission) => userCan(user, perm), [user]);
+
+  const updateUser = useCallback((next: User) => setUser(next), []);
 
   const value = useMemo(
-    () => ({ user, loading, login, signup, logout, can }),
-    [user, loading, login, signup, logout, can],
+    () => ({ user, loading, login, signup, logout, can, updateUser }),
+    [user, loading, login, signup, logout, can, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

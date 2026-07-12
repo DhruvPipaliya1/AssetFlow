@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { App, Button, Table, Select, Flex, Space, Card, Calendar, Badge, Popconfirm, Segmented, Tooltip, type TableProps } from 'antd';
+import { useEffect, useMemo, useState } from 'react';
+import { App, Button, Table, Select, Flex, Space, Card, Calendar, Badge, Popconfirm, Segmented, Tooltip, Empty, Divider, Typography, type TableProps } from 'antd';
 import { PlusOutlined, EditOutlined, StopOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import dayjs, { type Dayjs } from 'dayjs';
@@ -24,6 +24,7 @@ export default function BookingsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [rescheduling, setRescheduling] = useState<Booking | null>(null);
   const [calAssetId, setCalAssetId] = useState<string | undefined>();
+  const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
 
   const { data, isFetching } = useQuery({
     queryKey: ['bookings', filters],
@@ -50,6 +51,11 @@ export default function BookingsPage() {
     onError: (e) => message.error(apiErrorMessage(e)),
   });
 
+  // Auto-select the first bookable resource so the calendar shows immediately.
+  useEffect(() => {
+    if (!calAssetId && bookableAssets?.items?.length) setCalAssetId(bookableAssets.items[0].id);
+  }, [bookableAssets, calAssetId]);
+
   // Bookings grouped by day for the resource calendar.
   const byDay = useMemo(() => {
     const map = new Map<string, Booking[]>();
@@ -59,6 +65,10 @@ export default function BookingsPage() {
     }
     return map;
   }, [feed]);
+
+  const dayBookings = (byDay.get(selectedDate.format('YYYY-MM-DD')) ?? [])
+    .slice()
+    .sort((a, b) => dayjs(a.startTime).valueOf() - dayjs(b.startTime).valueOf());
 
   const columns: TableProps<Booking>['columns'] = [
     { title: 'Resource', key: 'asset', render: (_, b) => `${b.asset?.assetTag} — ${b.asset?.name}` },
@@ -136,23 +146,65 @@ export default function BookingsPage() {
         }
       >
         {calAssetId ? (
-          <Calendar
-            fullscreen={false}
-            cellRender={(current: Dayjs, info) => {
-              if (info.type !== 'date') return info.originNode;
-              const items = byDay.get(current.format('YYYY-MM-DD')) ?? [];
-              return (
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                  {items.slice(0, 2).map((b) => (
-                    <li key={b.id}>
-                      <Badge status="processing" text={dayjs(b.startTime).format('HH:mm')} />
-                    </li>
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 340px', minWidth: 300 }}>
+              <Calendar
+                fullscreen={false}
+                onSelect={(d) => setSelectedDate(d)}
+                cellRender={(current: Dayjs, info) => {
+                  if (info.type !== 'date') return info.originNode;
+                  const items = byDay.get(current.format('YYYY-MM-DD')) ?? [];
+                  return (
+                    <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                      {items.slice(0, 2).map((b) => (
+                        <li key={b.id}>
+                          <Badge status="processing" text={dayjs(b.startTime).format('HH:mm')} />
+                        </li>
+                      ))}
+                      {items.length > 2 && <li>+{items.length - 2} more</li>}
+                    </ul>
+                  );
+                }}
+              />
+            </div>
+            <div style={{ flex: '1 1 260px', minWidth: 240 }}>
+              <Divider titlePlacement="start" style={{ marginTop: 0 }}>
+                {selectedDate.format('ddd, MMM D')}
+              </Divider>
+              {dayBookings.length === 0 ? (
+                <Empty description="No bookings this day" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              ) : (
+                <Space direction="vertical" style={{ width: '100%' }} size={8}>
+                  {dayBookings.map((b) => (
+                    <div
+                      key={b.id}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '8px 12px',
+                        borderRadius: 8,
+                        background: 'var(--af-hover-bg)',
+                      }}
+                    >
+                      <span>
+                        <Typography.Text strong>
+                          {dayjs(b.startTime).format('HH:mm')}–{dayjs(b.endTime).format('HH:mm')}
+                        </Typography.Text>
+                        <div>
+                          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                            {b.bookedByUser?.name ?? '—'}
+                          </Typography.Text>
+                        </div>
+                      </span>
+                      <StatusTag status={b.status} />
+                    </div>
                   ))}
-                  {items.length > 2 && <li>+{items.length - 2} more</li>}
-                </ul>
-              );
-            }}
-          />
+                </Space>
+              )}
+            </div>
+          </div>
         ) : (
           <span className="af-muted">Select a bookable resource to see its schedule.</span>
         )}

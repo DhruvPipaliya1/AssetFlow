@@ -18,6 +18,7 @@ export const PAGE_META: Record<string, PageMeta> = {
   [PATHS.reports]: { title: 'Reports & Analytics', subtitle: 'Actionable operational insight' },
   [PATHS.organization]: { title: 'Organization Setup', subtitle: 'Master data everything else depends on — Admin only' },
   [PATHS.notifications]: { title: 'Notifications', subtitle: 'Activity feed & alerts' },
+  [PATHS.settings]: { title: 'Settings', subtitle: 'Your profile, security & preferences' },
   [PATHS.forbidden]: { title: 'Access denied' },
 };
 

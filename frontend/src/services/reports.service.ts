@@ -4,8 +4,10 @@ import type { ReportRow } from '../types/models';
 export type ReportName =
   | 'utilization'
   | 'maintenance-frequency'
+  | 'maintenance-by-category'
   | 'department-summary'
-  | 'booking-heatmap';
+  | 'booking-heatmap'
+  | 'lifecycle-alerts';
 
 export const reportsService = {
   rows: (name: ReportName) =>

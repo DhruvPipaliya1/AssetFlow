@@ -1,17 +1,188 @@
-.af-auth__wrap {
+/* ============================================================================
+   Auth split-screen — branded story panel (left) + form (right).
+   Themed from the design-system variables so it also works in dark mode.
+   ============================================================================ */
+
+.af-auth {
   min-height: 100vh;
+  display: flex;
+  background: var(--af-bg);
+}
+
+/* ---------- Left: brand panel ---------- */
+.af-auth__brand {
+  position: relative;
+  flex: 1 1 46%;
+  max-width: 620px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 56px 56px 40px;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(120% 120% at 80% 0%, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 42%),
+    linear-gradient(150deg, #7a5170 0%, #5f3f56 52%, #3c2836 100%);
+}
+
+/* soft decorative orbs */
+.af-auth__brand::before,
+.af-auth__brand::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+.af-auth__brand::before {
+  width: 420px;
+  height: 420px;
+  right: -140px;
+  bottom: -160px;
+}
+.af-auth__brand::after {
+  width: 220px;
+  height: 220px;
+  left: -80px;
+  top: 12%;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.af-auth__brand-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.af-auth__logo-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 64px;
+}
+
+.af-auth__mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+}
+.af-auth__mark--sm {
+  width: 34px;
+  height: 34px;
+  font-size: 13px;
+  background: var(--af-primary);
+  border: none;
+}
+
+.af-auth__word {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+.af-auth__word--dark {
+  color: var(--af-text-primary);
+}
+
+.af-auth__headline {
+  font-size: 38px;
+  line-height: 1.15;
+  font-weight: 700;
+  margin: 0 0 18px;
+  letter-spacing: -0.5px;
+}
+
+.af-auth__lead {
+  font-size: 15.5px;
+  line-height: 1.6;
+  margin: 0 0 44px;
+  max-width: 44ch;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.af-auth__features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.af-auth__feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.af-auth__feature-icon {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.af-auth__feature-title {
+  display: block;
+  font-weight: 600;
+  font-size: 14.5px;
+  margin-bottom: 2px;
+}
+.af-auth__feature-text {
+  display: block;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.af-auth__foot {
+  position: relative;
+  z-index: 1;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ---------- Right: form panel ---------- */
+.af-auth__panel {
+  flex: 1 1 54%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 32px 24px;
+  background: var(--af-surface);
 }
 
-.af-auth__card {
+.af-auth__form {
   width: 100%;
-  max-width: 400px;
+  max-width: 384px;
 }
 
-.af-auth__brand {
-  text-align: center;
-  margin-bottom: 24px;
+.af-auth__form-brand {
+  display: none; /* only shown when the brand panel is hidden (mobile) */
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .af-auth__brand {
+    display: none;
+  }
+  .af-auth__form-brand {
+    display: flex;
+  }
 }

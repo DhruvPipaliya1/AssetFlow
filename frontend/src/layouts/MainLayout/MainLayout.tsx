@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   Layout,
@@ -25,6 +25,8 @@ import {
   BulbOutlined,
   UserOutlined,
   LogoutOutlined,
+  SettingOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useThemeMode } from '../../context/ThemeContext';
@@ -32,6 +34,7 @@ import { useSocketNotifications } from '../../hooks/useSocketNotifications';
 import { navItemsForUser } from '../../config/navigation';
 import { getPageMeta } from '../../config/pageMeta';
 import { notificationsService } from '../../services/notifications.service';
+import { CommandPalette } from '../../components/CommandPalette';
 import { PATHS } from '../../routes/paths';
 import './MainLayout.css';
 
@@ -41,6 +44,7 @@ const { Header, Sider, Content } = Layout;
 // toggle + notifications + user menu, and the routed page in Content.
 export function MainLayout() {
   const [collapsed, setCollapsed] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -49,6 +53,18 @@ export function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const pageMeta = getPageMeta(location.pathname);
+
+  // ⌘/Ctrl+K opens the command palette anywhere in the app.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   // Live notifications: connect the socket + toast, and keep the bell fresh.
   useSocketNotifications();
@@ -69,10 +85,12 @@ export function MainLayout() {
       { key: 'name', label: user?.name, disabled: true },
       { key: 'role', label: <Typography.Text type="secondary">{user?.role}</Typography.Text>, disabled: true },
       { type: 'divider' },
+      { key: 'settings', icon: <SettingOutlined />, label: 'Settings' },
       { key: 'logout', icon: <LogoutOutlined />, label: 'Logout', danger: true },
     ],
     onClick: ({ key }) => {
       if (key === 'logout') logout();
+      else if (key === 'settings') navigate(PATHS.settings);
     },
   };
 
@@ -105,6 +123,9 @@ export function MainLayout() {
             </div>
           </Flex>
           <Space size="middle" style={{ paddingRight: 16 }}>
+            <Tooltip title="Search (Ctrl/⌘ + K)">
+              <Button type="text" aria-label="Search" icon={<SearchOutlined />} onClick={() => setPaletteOpen(true)} />
+            </Tooltip>
             <Tooltip title="Toggle theme">
               <Button type="text" aria-label="Toggle theme" icon={<BulbOutlined />} onClick={toggle} />
             </Tooltip>
@@ -141,7 +162,7 @@ export function MainLayout() {
             </Dropdown>
             <Dropdown menu={userMenu} trigger={['click']}>
               <Space style={{ cursor: 'pointer' }}>
-                <Avatar size="small" icon={<UserOutlined />} />
+                <Avatar size="small" src={user?.avatarUrl ?? undefined} icon={<UserOutlined />} />
                 <Typography.Text>{user?.name}</Typography.Text>
               </Space>
             </Dropdown>
@@ -159,6 +180,7 @@ export function MainLayout() {
           <Outlet />
         </Content>
       </Layout>
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </Layout>
   );
 }

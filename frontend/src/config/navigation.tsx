@@ -8,11 +8,12 @@ import {
   AuditOutlined,
   BarChartOutlined,
   ApartmentOutlined,
+  SettingOutlined,
   BellOutlined,
 } from '@ant-design/icons';
 import { PATHS } from '../routes/paths';
 import { Role } from '../types/enums';
-import { hasPermission, PERMISSION, type Permission } from '../types/permissions';
+import { userCan, PERMISSION, type Permission } from '../types/permissions';
 import type { User } from '../types/models';
 
 // Role/permission-aware navigation. This is where the app's "role-wise"
@@ -37,13 +38,14 @@ export const NAV_ITEMS: NavItem[] = [
   { key: PATHS.reports, label: 'Reports', icon: <BarChartOutlined />, permission: PERMISSION.ANALYTICS_VIEW_ALL },
   { key: PATHS.organization, label: 'Organization', icon: <ApartmentOutlined />, roles: [Role.ADMIN] },
   { key: PATHS.notifications, label: 'Notifications', icon: <BellOutlined /> },
+  { key: PATHS.settings, label: 'Settings', icon: <SettingOutlined /> },
 ];
 
 /** Filter nav items to those the given user is allowed to see. */
 export function navItemsForUser(user: User): NavItem[] {
   return NAV_ITEMS.filter((item) => {
     if (item.roles && !item.roles.includes(user.role)) return false;
-    if (item.permission && !hasPermission(user.role, item.permission)) return false;
+    if (item.permission && !userCan(user, item.permission)) return false;
     return true;
   });
 }
