@@ -1,5 +1,5 @@
 .af-sider {
-  border-inline-end: 1px solid var(--af-border);
+  border-inline-end: 1px solid var(--af-sidebar-border);
 }
 
 .af-logo {
@@ -8,7 +8,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--af-primary);
+  color: var(--af-sidebar-logo);
   font-weight: 700;
   font-size: 18px;
   letter-spacing: 0.3px;

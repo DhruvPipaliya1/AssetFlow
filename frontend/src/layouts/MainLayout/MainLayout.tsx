@@ -61,15 +61,15 @@ export function MainLayout() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider trigger={null} collapsible collapsed={collapsed} theme="light" className="af-sider">
+      <Sider trigger={null} collapsible collapsed={collapsed} theme="dark" className="af-sider">
         <div className="af-logo">{collapsed ? 'AF' : 'AssetFlow'}</div>
         <Menu
-          theme="light"
+          theme="dark"
           mode="inline"
           selectedKeys={[location.pathname]}
           items={menuItems}
           onClick={({ key }) => navigate(key)}
-          style={{ borderInlineEnd: 'none' }}
+          style={{ borderInlineEnd: 'none', background: 'transparent' }}
         />
       </Sider>
       <Layout>

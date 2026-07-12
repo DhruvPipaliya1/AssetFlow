@@ -43,10 +43,19 @@ export function buildTheme(mode: ThemeMode): ThemeConfig {
         headerPadding: 0,
       },
       Menu: {
+        // light menus (used elsewhere)
         itemSelectedBg: cssVar('--af-primary-light'),
         itemSelectedColor: primary,
         itemHoverBg: cssVar('--af-hover-bg'),
         itemBorderRadius: 10,
+        // dark (aubergine) sidebar menu — Odoo look
+        darkItemBg: cssVar('--af-sidebar'),
+        darkSubMenuItemBg: cssVar('--af-sidebar'),
+        darkItemColor: cssVar('--af-sidebar-text'),
+        darkItemHoverColor: cssVar('--af-sidebar-text-active'),
+        darkItemHoverBg: cssVar('--af-sidebar-hover-bg'),
+        darkItemSelectedBg: cssVar('--af-sidebar-active-bg'),
+        darkItemSelectedColor: cssVar('--af-sidebar-text-active'),
       },
       Card: {
         borderRadiusLG: 16,

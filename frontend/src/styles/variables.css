@@ -15,9 +15,17 @@
   /* ---- Background ---- */
   --af-bg: #f8f9fa; /* application background */
   --af-surface: #ffffff; /* cards / surfaces */
-  --af-sidebar: #ffffff;
   --af-hover-bg: #f3f4f6;
   --af-border: #e5e7eb;
+
+  /* ---- Sidebar (Odoo aubergine) ---- */
+  --af-sidebar: #714b67; /* aubergine, matches Odoo web client */
+  --af-sidebar-text: rgba(255, 255, 255, 0.82);
+  --af-sidebar-text-active: #ffffff;
+  --af-sidebar-active-bg: rgba(255, 255, 255, 0.16);
+  --af-sidebar-hover-bg: rgba(255, 255, 255, 0.1);
+  --af-sidebar-border: rgba(255, 255, 255, 0.12);
+  --af-sidebar-logo: #ffffff;
 
   /* ---- Text ---- */
   --af-text-primary: #111827;
@@ -99,7 +107,7 @@
 
   --af-bg: #0f1115;
   --af-surface: #181b21;
-  --af-sidebar: #181b21;
+  --af-sidebar: #4a3340; /* deep aubergine keeps the Odoo identity in dark mode */
   --af-hover-bg: #23262e;
   --af-border: #2a2e37;
 
