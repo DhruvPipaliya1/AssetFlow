@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Row, Col, Alert, App, Button, Space, Card, Divider, Timeline, Empty, Skeleton, Typography, Pagination } from 'antd';
 import {
+  AppstoreOutlined,
   LaptopOutlined,
   SwapOutlined,
   ToolOutlined,
@@ -86,6 +87,7 @@ export default function DashboardPage() {
   const [actPage, setActPage] = useState(1);
 
   const tiles = [
+    { title: 'Total Assets', value: k?.totalAssets, icon: <AppstoreOutlined />, color: 'var(--af-kpi-total)', to: PATHS.assets },
     { title: 'Assets Available', value: k?.available, icon: <LaptopOutlined />, color: 'var(--af-kpi-available)', to: PATHS.assets },
     { title: 'Assets Allocated', value: k?.allocated, icon: <SwapOutlined />, color: 'var(--af-kpi-allocated)', to: PATHS.allocations },
     { title: 'Maintenance Today', value: k?.maintenanceToday, icon: <ToolOutlined />, color: 'var(--af-kpi-maintenance)', to: PATHS.maintenance },

@@ -58,6 +58,7 @@
   --af-kpi-transfers: #f59e0b; /* yellow */
   --af-kpi-returns: #6366f1; /* indigo */
   --af-kpi-overdue: #ef4444; /* red */
+  --af-kpi-total: #14b8a6; /* teal */
 
   /* ---- Chart series (use in order) ---- */
   --af-chart-1: #714b67;

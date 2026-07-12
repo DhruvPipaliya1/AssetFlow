@@ -7,7 +7,7 @@
 [![React](https://img.shields.io/badge/React-19.x-61dafb?logo=react)](https://react.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue?logo=postgresql)](https://www.postgresql.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-6.x-2d3748?logo=prisma)](https://www.prisma.io/)
-[![Ant Design](https://img.shields.io/badge/Ant%20Design-5.x-0170fe?logo=antdesign)](https://ant.design/)
+[![Ant Design](https://img.shields.io/badge/Ant%20Design-6.x-0170fe?logo=antdesign)](https://ant.design/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
@@ -137,7 +137,7 @@ PORT=4000
 /departments   → CRUD + hierarchy
 /categories    → CRUD + custom fields
 /employees     → directory + role promotion
-/assets        → register, directory, detail, QR
+/assets        → register, directory, detail, QR, :id/bookings
 /allocations   → allocate, return, overdue
 /transfers     → request, approve, complete
 /bookings      → calendar, create, cancel, reschedule
@@ -148,6 +148,8 @@ PORT=4000
 /reports       → utilization, heatmap, export
 /notifications → feed, mark read
 /activity-log  → audit trail
+/rbac          → role → permission matrix
+/search        → global cross-entity search
 ```
 
 ---
@@ -172,20 +174,22 @@ VITE_WS_URL=http://localhost:4000
 
 **Stack highlights**
 
-- **Ant Design 5** — single component library (no MUI/shadcn)
+- **Ant Design 6** — single component library (no MUI/shadcn), with `@ant-design/v5-patch-for-react-19`
 - **TanStack Query** — server state, caching, invalidation
 - **React Router v7** — RBAC route guards (`ProtectedRoute`, `RoleRoute`)
 - **Zod** — form validation (mirrors backend schemas)
+- **Axios** — typed API client + interceptors (`lib` + `services/`)
 - **Socket.io-client** — live notifications + unread badge
 - **Recharts + @ant-design/plots** — dashboards & heatmaps
+- **Day.js** — booking calendar & time-slot math
 
 **Project structure** (`src/`)
 
 ```
-features/          # one folder per screen (mirrors backend modules)
+pages/             # one folder per screen (mirrors backend modules)
   auth/            # Login, Signup, ForgotPassword
   dashboard/       # KPI cards + quick actions
-  org/             # Departments | Categories | Employees tabs
+  organization/    # Departments | Categories | Employees tabs
   assets/          # Directory, Register, Detail Drawer
   allocations/     # Allocate, Transfers, Returns
   bookings/        # Calendar + BookingForm
@@ -193,10 +197,20 @@ features/          # one folder per screen (mirrors backend modules)
   audits/          # Cycles, assignments, discrepancies
   reports/         # Charts + CSV export
   notifications/   # Feed + bell dropdown
-components/common/ # StatusTag, KpiCard, WorkflowSteps, PageHeader, ConfirmButton, Loader
-lib/               # api.ts (axios), queryClient.ts, socket.ts, auth.tsx (context)
+  settings/        # Profile, theme, preferences
+  access/          # 403 / unauthorized screens
+  errors/          # 404 / error boundaries
+components/common/  # StatusTag, KpiCard, WorkflowSteps, PageHeader, ConfirmButton,
+                   #   Loader, DetailModal, PlaceholderPage
+layouts/           # AuthLayout, MainLayout (sidebar + topbar shell)
+routes/            # AppRoutes, ProtectedRoute, RoleRoute, paths.ts
+services/          # per-module API layer (apiClient.ts + <module>.service.ts)
+context/           # AuthContext, ThemeContext
+lib/               # queryClient.ts, socket.ts
 hooks/             # useAuth, useSocketNotifications
+config/            # env.ts, constants.ts, navigation.tsx, pageMeta.ts
 types/             # enums + DTOs mirrored from backend
+styles/            # theme tokens + global CSS
 ```
 
 ---
