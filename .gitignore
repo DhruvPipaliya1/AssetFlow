@@ -1,0 +1,70 @@
+# ─────────────────────────────────────────────
+#  Keep private (do NOT push) — per project preference
+#  matches CLAUDE.md at root, backend/, frontend/ — any level
+# ─────────────────────────────────────────────
+CLAUDE.md
+docs/
+
+# ─────────────────────────────────────────────
+#  Dependencies
+# ─────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ─────────────────────────────────────────────
+#  Secrets & environment (keep .env.example template)
+# ─────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+
+# ─────────────────────────────────────────────
+#  Build output
+# ─────────────────────────────────────────────
+dist/
+build/
+out/
+.vite/
+*.tsbuildinfo
+
+# ─────────────────────────────────────────────
+#  Prisma: keep schema + migrations; ignore generated client & local db
+# ─────────────────────────────────────────────
+**/generated/
+prisma/*.db
+prisma/*.db-journal
+
+# ─────────────────────────────────────────────
+#  Logs & caches
+# ─────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.cache/
+.eslintcache
+
+# ─────────────────────────────────────────────
+#  Uploads (local file storage during dev)
+# ─────────────────────────────────────────────
+uploads/
+tmp/
+
+# ─────────────────────────────────────────────
+#  Editor / OS
+# ─────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ─────────────────────────────────────────────
+#  Test / coverage
+# ─────────────────────────────────────────────
+coverage/
+.nyc_output/
