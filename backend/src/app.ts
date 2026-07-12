@@ -8,6 +8,9 @@ import { authRouter } from './modules/auth/auth.routes.js';
 import { departmentsRouter } from './modules/org/departments/departments.routes.js';
 import { categoriesRouter } from './modules/org/categories/categories.routes.js';
 import { employeesRouter } from './modules/org/employees/employees.routes.js';
+import { assetsRouter } from './modules/assets/assets.routes.js';
+import { allocationsRouter } from './modules/allocations/allocations.routes.js';
+import { transfersRouter } from './modules/allocations/transfers.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -29,6 +32,9 @@ export function createApp(): Express {
   app.use('/api/departments', departmentsRouter);
   app.use('/api/categories', categoriesRouter);
   app.use('/api/employees', employeesRouter);
+  app.use('/api/assets', assetsRouter);
+  app.use('/api/allocations', allocationsRouter);
+  app.use('/api/transfers', transfersRouter);
 
   // Error handler MUST be last.
   app.use(errorHandler);

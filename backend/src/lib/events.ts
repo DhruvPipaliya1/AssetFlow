@@ -17,7 +17,9 @@ export type DomainEventType =
   | 'MaintenanceRejected'
   | 'ReturnOverdue'
   | 'AuditDiscrepancyFlagged'
-  | 'RolePromoted';
+  | 'RolePromoted'
+  | 'TransferRequested'
+  | 'TransferRejected';
 
 export interface DomainEvent {
   type: DomainEventType | string;
