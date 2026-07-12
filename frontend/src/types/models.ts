@@ -27,3 +27,48 @@ export interface Paginated<T> {
   take: number;
   pages: number;
 }
+
+// ── Organization ──
+interface Ref {
+  id: string;
+  name: string;
+}
+
+export interface Department {
+  id: string;
+  name: string;
+  status: EntityStatus;
+  headUserId: string | null;
+  parentDepartmentId: string | null;
+  headUser?: Ref | null;
+  parentDepartment?: Ref | null;
+  _count?: { members: number; ownedAssets: number };
+  createdAt: string;
+}
+
+export type CustomFieldType = 'text' | 'number' | 'date' | 'boolean';
+export interface CategoryCustomField {
+  key: string;
+  label: string;
+  type: CustomFieldType;
+}
+
+export interface AssetCategory {
+  id: string;
+  name: string;
+  status: EntityStatus;
+  customFields: CategoryCustomField[] | null;
+  _count?: { assets: number };
+  createdAt: string;
+}
+
+export interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  status: EntityStatus;
+  departmentId: string | null;
+  department?: Ref | null;
+  createdAt: string;
+}
