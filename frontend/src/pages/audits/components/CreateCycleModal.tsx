@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { App, Modal, Form, Input, Select, DatePicker } from 'antd';
+import { App, Modal, Form, Input, Select, DatePicker, Alert } from 'antd';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Dayjs } from 'dayjs';
 import { auditsService } from '../../../services/audits.service';
@@ -50,6 +50,12 @@ export function CreateCycleModal({ open, onClose }: Props) {
       confirmLoading={create.isPending}
       destroyOnHidden
     >
+      <Alert
+        type="info"
+        showIcon
+        style={{ marginBottom: 16 }}
+        message="Audit items are generated automatically for every asset in the selected scope when you start the cycle — you don't add them by hand."
+      />
       <Form form={form} layout="vertical" requiredMark="optional" initialValues={{ scopeType: 'DEPARTMENT' }}>
         <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Name is required' }]}>
           <Input placeholder="e.g. Q3 Engineering Audit" />

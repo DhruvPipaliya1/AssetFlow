@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { App, Button, Table, Select, Flex, Space, Popconfirm, Tag, Modal, type TableProps } from 'antd';
+import { useState, type ReactNode } from 'react';
+import { App, Button, Table, Select, Flex, Space, Popconfirm, Tag, Modal, Image, type TableProps } from 'antd';
 import { PlusOutlined, CheckOutlined, CloseOutlined, PlayCircleOutlined, CheckCircleOutlined, UserAddOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 import { maintenanceService, type MaintenanceFilters } from '../../services/maintenance.service';
 import { employeesService } from '../../services/employees.service';
 import { apiErrorMessage } from '../../services/apiClient';
-import { StatusTag, WorkflowSteps } from '../../components/common';
+import { StatusTag, WorkflowSteps, DetailModal } from '../../components/common';
 import { useAuth } from '../../hooks/useAuth';
 import { PERMISSION } from '../../types/permissions';
 import { MaintenanceStatus, Priority } from '../../types/enums';
@@ -32,6 +33,7 @@ export default function MaintenancePage() {
   const [raiseOpen, setRaiseOpen] = useState(false);
   const [assignFor, setAssignFor] = useState<MaintenanceRequest | null>(null);
   const [techId, setTechId] = useState<string | undefined>(undefined);
+  const [detail, setDetail] = useState<MaintenanceRequest | null>(null);
 
   const { data, isFetching } = useQuery({
     queryKey: ['maintenance', filters],
@@ -77,8 +79,9 @@ export default function MaintenancePage() {
       align: 'right',
       render: (_, m) => {
         if (!canApprove) return null;
+        let inner: ReactNode = null;
         if (m.status === 'PENDING')
-          return (
+          inner = (
             <Space>
               <Popconfirm title="Approve? Asset → Under maintenance" onConfirm={() => decide.mutate({ id: m.id, decision: 'APPROVE' })}>
                 <Button size="small" type="primary" icon={<CheckOutlined />}>Approve</Button>
@@ -88,21 +91,21 @@ export default function MaintenancePage() {
               </Popconfirm>
             </Space>
           );
-        if (m.status === 'APPROVED')
-          return (
+        else if (m.status === 'APPROVED')
+          inner = (
             <Button size="small" icon={<UserAddOutlined />} onClick={() => { setAssignFor(m); setTechId(m.technicianUserId ?? undefined); }}>
               Assign technician
             </Button>
           );
-        if (m.status === 'TECH_ASSIGNED')
-          return <Button size="small" icon={<PlayCircleOutlined />} onClick={() => advance.mutate({ id: m.id, status: 'IN_PROGRESS' })}>Start work</Button>;
-        if (m.status === 'IN_PROGRESS')
-          return (
+        else if (m.status === 'TECH_ASSIGNED')
+          inner = <Button size="small" icon={<PlayCircleOutlined />} onClick={() => advance.mutate({ id: m.id, status: 'IN_PROGRESS' })}>Start work</Button>;
+        else if (m.status === 'IN_PROGRESS')
+          inner = (
             <Popconfirm title="Mark resolved? Asset → Available" onConfirm={() => advance.mutate({ id: m.id, status: 'RESOLVED' })}>
               <Button size="small" type="primary" icon={<CheckCircleOutlined />}>Resolve</Button>
             </Popconfirm>
           );
-        return null;
+        return inner ? <span onClick={(e) => e.stopPropagation()}>{inner}</span> : null;
       },
     },
   ];
@@ -128,9 +131,7 @@ export default function MaintenancePage() {
         loading={isFetching}
         columns={columns}
         dataSource={data?.items ?? []}
-        expandable={{
-          expandedRowRender: (m) => <WorkflowSteps steps={STEPS} current={m.status} error={m.status === 'REJECTED'} />,
-        }}
+        onRow={(m) => ({ onClick: () => setDetail(m), style: { cursor: 'pointer' } })}
         pagination={{
           current: filters.page,
           pageSize: PAGE_SIZE,
@@ -141,6 +142,28 @@ export default function MaintenancePage() {
       />
 
       <RaiseMaintenanceModal open={raiseOpen} onClose={() => setRaiseOpen(false)} />
+
+      <DetailModal
+        open={!!detail}
+        onClose={() => setDetail(null)}
+        title={detail ? `${detail.asset?.assetTag} — ${detail.asset?.name}` : 'Maintenance request'}
+        header={detail && <WorkflowSteps steps={STEPS} current={detail.status} error={detail.status === 'REJECTED'} />}
+        items={
+          detail
+            ? [
+                { label: 'Status', value: <StatusTag status={detail.status} /> },
+                { label: 'Priority', value: <Tag color={PRIORITY_COLOR[detail.priority]}>{detail.priority}</Tag> },
+                { label: 'Issue', value: detail.description },
+                { label: 'Raised by', value: detail.raisedByUser?.name },
+                { label: 'Technician', value: detail.technicianUser?.name },
+                { label: 'Approved by', value: detail.approvedByUser?.name },
+                { label: 'Raised at', value: dayjs(detail.createdAt).format('MMM D, YYYY HH:mm') },
+                { label: 'Resolved at', value: detail.resolvedAt ? dayjs(detail.resolvedAt).format('MMM D, YYYY HH:mm') : null },
+                ...(detail.photoUrl ? [{ label: 'Photo', value: <Image src={detail.photoUrl} width={120} /> }] : []),
+              ]
+            : []
+        }
+      />
 
       <Modal
         open={!!assignFor}

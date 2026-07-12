@@ -14,13 +14,20 @@ import { BookingHeatmap } from './components/BookingHeatmap';
 import { StatusTag } from '../../components/common';
 import type { ReportRow } from '../../types/models';
 
-const PRIMARY = 'var(--af-primary)';
+// Chart palette — driven by the design-system variables so it matches the app
+// theme and adapts to dark mode (Recharts resolves CSS var() colours).
+const C = {
+  primary: 'var(--af-chart-1)', // aubergine
+  blue: 'var(--af-chart-2)',
+  maintenance: 'var(--af-maintenance)', // orange
+  violet: 'var(--af-chart-7)',
+};
 
 const SERIES = {
-  available: '#52c41a',
-  allocated: '#1677ff',
-  underMaintenance: '#faad14',
-  lost: '#ff4d4f',
+  available: 'var(--af-status-available)',
+  allocated: 'var(--af-status-allocated)',
+  underMaintenance: 'var(--af-status-maintenance)',
+  lost: 'var(--af-status-lost)',
 };
 
 const ALERT_COLOR: Record<string, string> = {
@@ -120,8 +127,8 @@ export default function ReportsPage() {
                     <YAxis allowDecimals={false} />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="timesAllocated" name="Allocations" fill={PRIMARY} radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="timesBooked" name="Bookings" fill="#722ed1" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="timesAllocated" name="Allocations" fill={C.primary} radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="timesBooked" name="Bookings" fill={C.blue} radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -149,7 +156,7 @@ export default function ReportsPage() {
                     <XAxis dataKey="assetTag" angle={-35} textAnchor="end" height={70} interval={0} fontSize={11} />
                     <YAxis allowDecimals={false} />
                     <Tooltip />
-                    <Bar dataKey="maintenanceCount" name="Requests" fill="#faad14" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="maintenanceCount" name="Requests" fill={C.maintenance} radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -168,7 +175,7 @@ export default function ReportsPage() {
                     <XAxis type="number" allowDecimals={false} />
                     <YAxis type="category" dataKey="category" width={120} fontSize={12} />
                     <Tooltip />
-                    <Bar dataKey="maintenanceCount" name="Requests" fill="#eb2f96" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="maintenanceCount" name="Requests" fill={C.violet} radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}

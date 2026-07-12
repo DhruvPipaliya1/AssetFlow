@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   App,
   Tabs,
@@ -12,6 +12,8 @@ import {
   Select,
   Typography,
   Descriptions,
+  Row,
+  Col,
 } from 'antd';
 import { UserOutlined, UploadOutlined, DeleteOutlined, LockOutlined } from '@ant-design/icons';
 import { useMutation } from '@tanstack/react-query';
@@ -44,6 +46,25 @@ const LANDING_OPTIONS = [
   { value: PATHS.notifications, label: 'Notifications' },
 ];
 
+// Two-column settings row: description on the left, controls on the right.
+function Section({ title, description, children }: { title: string; description: string; children: ReactNode }) {
+  return (
+    <Row gutter={[40, 24]} style={{ maxWidth: 980, marginTop: 4 }}>
+      <Col xs={24} md={9}>
+        <Typography.Title level={5} style={{ marginTop: 0 }}>
+          {title}
+        </Typography.Title>
+        <Typography.Paragraph type="secondary" style={{ fontSize: 13, marginBottom: 0 }}>
+          {description}
+        </Typography.Paragraph>
+      </Col>
+      <Col xs={24} md={15}>
+        <Card>{children}</Card>
+      </Col>
+    </Row>
+  );
+}
+
 function ProfileTab() {
   const { user, updateUser } = useAuth();
   const { message } = App.useApp();
@@ -63,7 +84,7 @@ function ProfileTab() {
   };
 
   return (
-    <Card style={{ maxWidth: 560 }}>
+    <Section title="Profile" description="Your name and avatar — shown across the app in the header and activity.">
       <Space align="center" size="large" style={{ marginBottom: 24 }}>
         <Avatar size={72} src={avatar ?? undefined} icon={<UserOutlined />} />
         <Space direction="vertical" size={4}>
@@ -87,7 +108,7 @@ function ProfileTab() {
         </Descriptions>
         <Button type="primary" htmlType="submit" loading={save.isPending}>Save profile</Button>
       </Form>
-    </Card>
+    </Section>
   );
 }
 
@@ -102,7 +123,7 @@ function SecurityTab() {
   });
 
   return (
-    <Card style={{ maxWidth: 480 }}>
+    <Section title="Password" description="Change your password. You'll need your current one to confirm it's you.">
       <Form form={form} layout="vertical" onFinish={(v) => save.mutate(v)}>
         <Form.Item name="currentPassword" label="Current password" rules={[{ required: true, message: 'Required' }]}>
           <Input.Password prefix={<LockOutlined />} />
@@ -129,7 +150,7 @@ function SecurityTab() {
         </Form.Item>
         <Button type="primary" htmlType="submit" loading={save.isPending}>Change password</Button>
       </Form>
-    </Card>
+    </Section>
   );
 }
 
@@ -147,7 +168,7 @@ function PreferencesTab() {
   });
 
   return (
-    <Card style={{ maxWidth: 480 }}>
+    <Section title="Preferences" description="Personalize your workspace. Theme applies instantly; saving stores it to your account.">
       <Form layout="vertical">
         <Form.Item label="Theme">
           <Select
@@ -159,12 +180,9 @@ function PreferencesTab() {
         <Form.Item label="Default landing page" tooltip="Where you land after signing in">
           <Select value={landingPath} onChange={setLandingPath} options={LANDING_OPTIONS} />
         </Form.Item>
-        <Typography.Paragraph type="secondary" style={{ fontSize: 12 }}>
-          Theme applies instantly; saving stores it to your account so it follows you across devices.
-        </Typography.Paragraph>
         <Button type="primary" loading={save.isPending} onClick={() => save.mutate()}>Save preferences</Button>
       </Form>
-    </Card>
+    </Section>
   );
 }
 
@@ -175,7 +193,6 @@ export default function SettingsPage() {
     { key: 'security', label: 'Security', children: <SecurityTab /> },
     { key: 'preferences', label: 'Preferences', children: <PreferencesTab /> },
   ];
-  // Access Control lives here, gated to permission managers (Admin / super-admin).
   if (can(PERMISSION.RBAC_MANAGE)) {
     items.push({ key: 'access', label: 'Access Control', children: <AccessControlPanel /> });
   }

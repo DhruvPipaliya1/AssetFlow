@@ -1,5 +1,12 @@
 .af-sider {
   border-inline-end: 1px solid var(--af-sidebar-border);
+  /* Pin the sidebar so it stays put while the page content scrolls. */
+  position: fixed;
+  inset-block: 0; /* top: 0; bottom: 0 */
+  inset-inline-start: 0; /* left: 0 */
+  height: 100vh;
+  overflow: auto; /* long menus scroll inside the sider, not the page */
+  z-index: 11; /* keep its right border above the sticky header */
 }
 
 .af-logo {

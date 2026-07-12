@@ -107,7 +107,15 @@ export function MainLayout() {
           style={{ borderInlineEnd: 'none', background: 'transparent' }}
         />
       </Sider>
-      <Layout>
+      <Layout
+        style={{
+          // Offset by the fixed sider's width so content isn't hidden under it.
+          // Matches antd's default width (200) / collapsedWidth (80); transition
+          // keeps the shift in sync with the sider's collapse animation.
+          marginInlineStart: collapsed ? 80 : 200,
+          transition: 'margin-inline-start 0.2s',
+        }}
+      >
         <Header className="af-header" style={{ background: colorBgContainer }}>
           <Flex align="center" style={{ minWidth: 0 }}>
             <Button
