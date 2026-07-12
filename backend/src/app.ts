@@ -16,6 +16,8 @@ import { maintenanceRouter } from './modules/maintenance/maintenance.routes.js';
 import { auditCyclesRouter, auditItemsRouter } from './modules/audits/audits.routes.js';
 import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
 import { reportsRouter } from './modules/reports/reports.routes.js';
+import { notificationsRouter } from './modules/notifications/notifications.routes.js';
+import { activityLogRouter } from './modules/activity-log/activity-log.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -47,6 +49,8 @@ export function createApp(): Express {
   app.use('/api/audit-items', auditItemsRouter);
   app.use('/api/dashboard', dashboardRouter);
   app.use('/api/reports', reportsRouter);
+  app.use('/api/notifications', notificationsRouter);
+  app.use('/api/activity-log', activityLogRouter);
 
   // Error handler MUST be last.
   app.use(errorHandler);

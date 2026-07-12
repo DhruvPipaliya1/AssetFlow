@@ -57,7 +57,9 @@ async function handle(event: DomainEvent): Promise<void> {
   try {
     // 1) audit trail — every event
     await logActivity({
-      actorUserId: event.actorUserId ?? 'system',
+      // null = system-generated (e.g. overdue cron). NEVER the string 'system' —
+      // actorUserId is a FK to User and would violate the constraint.
+      actorUserId: event.actorUserId ?? null,
       action: event.type,
       entityType: event.entityType,
       entityId: event.entityId,
