@@ -40,6 +40,38 @@ reportsRouter.get(
 
 /**
  * @openapi
+ * /reports/maintenance-by-category:
+ *   get:
+ *     tags: [Reports]
+ *     summary: Maintenance request volume grouped by asset category. ?format=csv to export.
+ *     security: [{ bearerAuth: [] }]
+ *     parameters: [{ in: query, name: format, schema: { type: string, enum: [json, csv] } }]
+ *     responses: { 200: { description: OK } }
+ */
+reportsRouter.get(
+  '/maintenance-by-category',
+  validate(reportQuerySchema, 'query'),
+  reportsController.maintenanceByCategory,
+);
+
+/**
+ * @openapi
+ * /reports/lifecycle-alerts:
+ *   get:
+ *     tags: [Reports]
+ *     summary: Assets due for maintenance or nearing retirement (age, condition, warranty). ?format=csv to export.
+ *     security: [{ bearerAuth: [] }]
+ *     parameters: [{ in: query, name: format, schema: { type: string, enum: [json, csv] } }]
+ *     responses: { 200: { description: OK } }
+ */
+reportsRouter.get(
+  '/lifecycle-alerts',
+  validate(reportQuerySchema, 'query'),
+  reportsController.lifecycleAlerts,
+);
+
+/**
+ * @openapi
  * /reports/department-summary:
  *   get:
  *     tags: [Reports]

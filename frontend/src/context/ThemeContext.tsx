@@ -12,6 +12,7 @@ import { STORAGE_KEYS } from '../config/constants';
 interface ThemeContextValue {
   mode: ThemeMode;
   toggle: () => void;
+  setMode: (mode: ThemeMode) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
@@ -29,15 +30,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.setAttribute('data-theme', mode);
   }
 
-  const toggle = () =>
-    setMode((prev) => {
-      const next = prev === 'light' ? 'dark' : 'light';
-      localStorage.setItem(STORAGE_KEYS.themeMode, next);
-      return next;
-    });
+  const setModeExplicit = (next: ThemeMode) => {
+    localStorage.setItem(STORAGE_KEYS.themeMode, next);
+    setMode(next);
+  };
+
+  const toggle = () => setModeExplicit(mode === 'light' ? 'dark' : 'light');
 
   const themeConfig = useMemo(() => buildTheme(mode), [mode]);
-  const value = useMemo(() => ({ mode, toggle }), [mode]);
+  const value = useMemo(() => ({ mode, toggle, setMode: setModeExplicit }), [mode]);
 
   return (
     <ThemeContext.Provider value={value}>

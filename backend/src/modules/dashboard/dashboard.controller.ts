@@ -14,4 +14,8 @@ export const dashboardController = {
     if (!req.user) throw unauthorized();
     res.json(await dashboardService.kpis(actorOf(req.user)));
   }),
+
+  recentActivity: asyncHandler(async (_req, res) => {
+    res.json({ items: await dashboardService.recentActivity() });
+  }),
 };

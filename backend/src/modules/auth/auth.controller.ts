@@ -20,7 +20,30 @@ export const authController = {
   }),
 
   forgotPassword: asyncHandler(async (req, res) => {
-    await authService.forgotPassword(req.body.email);
-    res.json({ ok: true }); // always 200
+    const { resetToken } = await authService.forgotPassword(req.body.email);
+    // resetToken is surfaced here as a dev convenience (no email infra). In
+    // production it would be delivered via an emailed reset link instead.
+    res.json({ ok: true, resetToken });
+  }),
+
+  resetPassword: asyncHandler(async (req, res) => {
+    await authService.resetPassword(req.body);
+    res.json({ ok: true });
+  }),
+
+  updateProfile: asyncHandler(async (req, res) => {
+    if (!req.user) throw unauthorized();
+    res.json({ user: await authService.updateProfile(req.user.id, req.body) });
+  }),
+
+  changePassword: asyncHandler(async (req, res) => {
+    if (!req.user) throw unauthorized();
+    await authService.changePassword(req.user.id, req.body);
+    res.json({ ok: true });
+  }),
+
+  updatePreferences: asyncHandler(async (req, res) => {
+    if (!req.user) throw unauthorized();
+    res.json({ user: await authService.updatePreferences(req.user.id, req.body) });
   }),
 };

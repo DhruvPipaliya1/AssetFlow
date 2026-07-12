@@ -32,6 +32,8 @@ const report = (
 export const reportsController = {
   utilization: report('utilization', reportsService.utilization),
   maintenanceFrequency: report('maintenance-frequency', reportsService.maintenanceFrequency),
+  maintenanceByCategory: report('maintenance-by-category', reportsService.maintenanceByCategory),
   departmentSummary: report('department-summary', reportsService.departmentSummary),
   bookingHeatmap: report('booking-heatmap', reportsService.bookingHeatmap),
+  lifecycleAlerts: report('lifecycle-alerts', reportsService.lifecycleAlerts),
 };

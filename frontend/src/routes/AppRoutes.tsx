@@ -19,6 +19,7 @@ import MaintenancePage from '../pages/maintenance/MaintenancePage';
 import AuditsPage from '../pages/audits/AuditsPage';
 import ReportsPage from '../pages/reports/ReportsPage';
 import OrganizationPage from '../pages/organization/OrganizationPage';
+import SettingsPage from '../pages/settings/SettingsPage';
 import NotificationsPage from '../pages/notifications/NotificationsPage';
 import ForbiddenPage from '../pages/errors/ForbiddenPage';
 import NotFoundPage from '../pages/errors/NotFoundPage';
@@ -43,6 +44,7 @@ export function AppRoutes() {
           <Route path={PATHS.bookings} element={<BookingsPage />} />
           <Route path={PATHS.maintenance} element={<MaintenancePage />} />
           <Route path={PATHS.notifications} element={<NotificationsPage />} />
+          <Route path={PATHS.settings} element={<SettingsPage />} />
 
           {/* permission-gated */}
           <Route element={<RoleRoute permission={PERMISSION.AUDIT_PERFORM} />}>

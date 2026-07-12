@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import type { Asset, AssetDetail, Paginated } from '../types/models';
+import type { Asset, AssetDetail, AssetDocument, CustomFieldValue, Paginated } from '../types/models';
 import type { AssetStatus } from '../types/enums';
 
 export interface AssetFilters {
@@ -25,6 +25,8 @@ export interface AssetPayload {
   location?: string;
   isBookable?: boolean;
   photoUrl?: string;
+  documents?: AssetDocument[];
+  customFieldValues?: Record<string, CustomFieldValue>;
   ownerDepartmentId?: string;
 }
 

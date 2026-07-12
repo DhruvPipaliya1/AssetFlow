@@ -19,3 +19,14 @@ dashboardRouter.use(authMiddleware);
  *       403: { description: Forbidden }
  */
 dashboardRouter.get('/kpis', requirePermission(PERMISSION.ANALYTICS_VIEW), dashboardController.kpis);
+
+/**
+ * @openapi
+ * /dashboard/activity:
+ *   get:
+ *     tags: [Dashboard]
+ *     summary: Recent operational activity feed (all roles)
+ *     security: [{ bearerAuth: [] }]
+ *     responses: { 200: { description: OK } }
+ */
+dashboardRouter.get('/activity', dashboardController.recentActivity);

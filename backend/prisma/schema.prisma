@@ -98,6 +98,8 @@ model User {
   passwordHash String
   role         Role     @default(EMPLOYEE)
   status       Status   @default(ACTIVE)
+  avatarUrl    String?  // inline data URL or hosted image
+  preferences  Json?    // { theme, landingPath, ... } — user UI preferences
   departmentId String?
   department   Department? @relation("DepartmentMembers", fields: [departmentId], references: [id])
   createdAt    DateTime @default(now())
@@ -167,6 +169,7 @@ model Asset {
   isBookable          Boolean     @default(false)
   photoUrl            String?
   documents           Json?
+  customFieldValues   Json?       // category-specific field values, keyed by AssetCategory.customFields[].key
   currentHolderUserId String?
   currentHolderUser   User?       @relation("AssetCurrentHolder", fields: [currentHolderUserId], references: [id])
   ownerDepartmentId   String?
@@ -322,6 +325,18 @@ model Notification {
   createdAt  DateTime @default(now())
 
   @@index([userId, isRead])
+}
+
+// Editable role→permission grants (the dynamic RBAC matrix). Row presence =
+// granted. Governance permissions stay locked to ADMIN in code, never here.
+model RolePermission {
+  id         String   @id @default(cuid())
+  role       Role
+  permission String
+  createdAt  DateTime @default(now())
+
+  @@unique([role, permission])
+  @@index([role])
 }
 
 model ActivityLog {

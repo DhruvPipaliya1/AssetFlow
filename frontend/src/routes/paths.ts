@@ -15,6 +15,7 @@ export const PATHS = {
   reports: '/reports',
   organization: '/organization',
   notifications: '/notifications',
+  settings: '/settings',
   // errors
   forbidden: '/403',
 } as const;

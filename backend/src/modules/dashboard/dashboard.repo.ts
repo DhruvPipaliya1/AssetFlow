@@ -51,4 +51,41 @@ export const dashboardRepo = {
       overdueReturns,
     };
   },
+
+  // Recent *operational* activity for the dashboard feed (excludes noise like
+  // logins / profile edits). Org-wide + lightweight.
+  recentActivity: (take: number) =>
+    prisma.activityLog.findMany({
+      where: { action: { in: [...OPERATIONAL_ACTIONS] } },
+      orderBy: { createdAt: 'desc' },
+      take,
+      include: { actorUser: { select: { name: true } } },
+    }),
+
+  assetsByIds: (ids: string[]) =>
+    prisma.asset.findMany({ where: { id: { in: ids } }, select: { id: true, assetTag: true, name: true } }),
 };
+
+// The activity-log actions worth surfacing on the dashboard.
+const OPERATIONAL_ACTIONS = [
+  'AssetRegistered',
+  'AssetAllocated',
+  'AssetReturned',
+  'AssetTransferred',
+  'TransferRequested',
+  'TransferRejected',
+  'BookingCreated',
+  'BookingCancelled',
+  'BookingRescheduled',
+  'MaintenanceRaised',
+  'MaintenanceApproved',
+  'MaintenanceRejected',
+  'MaintenanceResolved',
+  'MaintenanceStatusChanged',
+  'ReturnOverdue',
+  'AuditDiscrepancyFlagged',
+  'AuditCycleCreated',
+  'AuditCycleStarted',
+  'AuditItemMarked',
+  'AuditorsAssigned',
+] as const;

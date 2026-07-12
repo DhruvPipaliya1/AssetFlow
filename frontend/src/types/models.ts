@@ -12,6 +12,11 @@ import type {
 } from './enums';
 
 // DTOs mirrored from the backend responses. Extend as modules land.
+export interface UserPreferences {
+  theme?: 'light' | 'dark';
+  landingPath?: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -19,6 +24,9 @@ export interface User {
   role: Role;
   status: EntityStatus;
   departmentId: string | null;
+  avatarUrl?: string | null;
+  preferences?: UserPreferences | null;
+  permissions?: string[]; // effective permissions from the live RBAC matrix
   createdAt: string;
 }
 
@@ -85,6 +93,13 @@ export interface Employee {
 }
 
 // ── Assets ──
+export interface AssetDocument {
+  name: string;
+  url: string;
+}
+
+export type CustomFieldValue = string | number | boolean | null;
+
 export interface Asset {
   id: string;
   name: string;
@@ -99,6 +114,8 @@ export interface Asset {
   status: AssetStatus;
   isBookable: boolean;
   photoUrl: string | null;
+  documents?: AssetDocument[] | null;
+  customFieldValues?: Record<string, CustomFieldValue> | null;
   currentHolderUserId: string | null;
   currentHolderUser?: (Ref & { email?: string }) | null;
   ownerDepartmentId: string | null;
@@ -260,6 +277,15 @@ export interface DashboardKpis {
 export interface DashboardResponse {
   scope: 'ORG' | 'DEPARTMENT';
   kpis: DashboardKpis;
+}
+
+export interface DashboardActivityItem {
+  id: string;
+  action: string;
+  actorName: string | null;
+  assetTag: string | null;
+  assetName: string | null;
+  createdAt: string;
 }
 
 // ── Reports ──

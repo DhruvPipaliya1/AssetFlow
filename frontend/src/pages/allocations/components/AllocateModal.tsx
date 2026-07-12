@@ -12,6 +12,7 @@ import { apiErrorMessage, apiErrorStatus, apiErrorDetails } from '../../../servi
 interface Props {
   open: boolean;
   onClose: () => void;
+  presetAsset?: { id: string; label: string }; // pre-select + lock the asset (e.g. from the asset drawer)
 }
 
 interface Conflict {
@@ -22,7 +23,7 @@ interface Conflict {
 // Allocate an available asset to a user. If the asset is already held the server
 // returns 409 { heldBy, action: TRANSFER_REQUEST } — we surface that and offer a
 // one-click Transfer Request to the same user (the headline conflict flow).
-export function AllocateModal({ open, onClose }: Props) {
+export function AllocateModal({ open, onClose, presetAsset }: Props) {
   const qc = useQueryClient();
   const { message } = App.useApp();
   const [form] = Form.useForm();
@@ -43,8 +44,16 @@ export function AllocateModal({ open, onClose }: Props) {
     if (open) {
       form.resetFields();
       setConflict(null);
+      if (presetAsset) form.setFieldsValue({ assetId: presetAsset.id });
     }
-  }, [open, form]);
+  }, [open, form, presetAsset]);
+
+  // Options from the available assets, plus the preset (in case it isn't in the
+  // first page of results).
+  const assetOptions = (assets?.items ?? []).map((a) => ({ value: a.id, label: `${a.assetTag} — ${a.name}` }));
+  if (presetAsset && !assetOptions.some((o) => o.value === presetAsset.id)) {
+    assetOptions.unshift({ value: presetAsset.id, label: presetAsset.label });
+  }
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['allocations'] });
@@ -90,7 +99,7 @@ export function AllocateModal({ open, onClose }: Props) {
   return (
     <Modal
       open={open}
-      title="Allocate asset"
+      title={presetAsset ? `Allocate ${presetAsset.label}` : 'Allocate asset'}
       onCancel={onClose}
       onOk={() => form.validateFields().then((v) => allocate.mutate(v))}
       okText="Allocate"
@@ -125,7 +134,8 @@ export function AllocateModal({ open, onClose }: Props) {
             showSearch
             optionFilterProp="label"
             placeholder="Available assets"
-            options={(assets?.items ?? []).map((a) => ({ value: a.id, label: `${a.assetTag} — ${a.name}` }))}
+            disabled={!!presetAsset}
+            options={assetOptions}
           />
         </Form.Item>
         <Form.Item name="allocatedToUserId" label="Allocate to" rules={[{ required: true, message: 'Pick a recipient' }]}>

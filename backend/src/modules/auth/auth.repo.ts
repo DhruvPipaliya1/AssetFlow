@@ -8,4 +8,13 @@ export const authRepo = {
   // role is forced to EMPLOYEE here — the ONLY way accounts are created.
   createEmployee: (data: { name: string; email: string; passwordHash: string }) =>
     prisma.user.create({ data: { ...data, role: 'EMPLOYEE' } }),
+
+  updatePassword: (id: string, passwordHash: string) =>
+    prisma.user.update({ where: { id }, data: { passwordHash } }),
+
+  updateProfile: (id: string, data: { name?: string; avatarUrl?: string | null }) =>
+    prisma.user.update({ where: { id }, data }),
+
+  updatePreferences: (id: string, preferences: unknown) =>
+    prisma.user.update({ where: { id }, data: { preferences: preferences as object } }),
 };
