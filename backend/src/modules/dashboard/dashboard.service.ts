@@ -20,18 +20,31 @@ export const dashboardService = {
   // Recent activity feed for the dashboard — enriched with the related asset
   // tag/name where resolvable (entityType Asset, or a meta.assetId).
   async recentActivity(): Promise<ActivityItem[]> {
-    const rows = await dashboardRepo.recentActivity(10);
+    const raw = await dashboardRepo.recentActivity(30);
+
+    // Collapse near-simultaneous duplicates of the same action on the same entity
+    // (e.g. an event that notifies two parties): same action+entity+actor within
+    // the same second is one business action.
+    const seen = new Set<string>();
+    const rows = raw.filter((r) => {
+      const key = `${r.action}|${r.entityId ?? ''}|${r.actorUserId ?? ''}|${Math.floor(r.createdAt.getTime() / 1000)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
     const assetIdOf = (r: (typeof rows)[number]): string | null => {
       if (r.entityType === 'Asset' && r.entityId) return r.entityId;
       const metaAssetId = (r.metadata as { assetId?: unknown } | null)?.assetId;
       return typeof metaAssetId === 'string' ? metaAssetId : null;
     };
 
-    const assetIds = [...new Set(rows.map(assetIdOf).filter((id): id is string => !!id))];
+    const top = rows.slice(0, 15);
+    const assetIds = [...new Set(top.map(assetIdOf).filter((id): id is string => !!id))];
     const assets = assetIds.length ? await dashboardRepo.assetsByIds(assetIds) : [];
     const byId = new Map(assets.map((a) => [a.id, a]));
 
-    return rows.slice(0, 8).map((r) => {
+    return top.map((r) => {
       const asset = byId.get(assetIdOf(r) ?? '');
       return {
         id: r.id,

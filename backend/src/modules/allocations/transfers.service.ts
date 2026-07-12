@@ -11,6 +11,7 @@ import { badRequest, conflict, notFound } from '../../lib/errors.js';
 import { parsePagination, paginated } from '../../lib/search.js';
 import { assertTransition } from '../../lib/stateMachine.js';
 import { emit } from '../../lib/events.js';
+import { notify } from '../../lib/notify.js';
 
 interface LockedAsset {
   id: string;
@@ -136,6 +137,7 @@ export const transfersService = {
       });
     });
 
+    // One event = one activity-log entry (the transfer is a single action).
     emit({
       type: 'AssetTransferred',
       actorUserId: actor.id,
@@ -145,15 +147,12 @@ export const transfersService = {
       message: 'An asset has been transferred to you',
       meta: { transferId: id, fromUserId: transfer.fromUserId },
     });
+    // Notify the previous holder directly — a notification, NOT a second
+    // activity-log entry (that would duplicate the transfer in the audit feed).
     if (transfer.fromUserId) {
-      emit({
-        type: 'AssetTransferred',
-        actorUserId: actor.id,
-        targetUserId: transfer.fromUserId,
+      await notify(transfer.fromUserId, 'AssetTransferred', 'An asset was transferred away from you', {
         entityType: 'Asset',
         entityId: transfer.assetId,
-        message: 'An asset was transferred away from you',
-        meta: { transferId: id, toUserId: transfer.toUserId },
       });
     }
     return this.get(id);
