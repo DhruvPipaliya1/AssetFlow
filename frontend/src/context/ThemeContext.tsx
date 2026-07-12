@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from 'react';
 import { ConfigProvider, App as AntdApp } from 'antd';
-import { lightTheme, darkTheme, type ThemeMode } from '../styles/theme';
+import { buildTheme, type ThemeMode } from '../styles/theme';
 import { STORAGE_KEYS } from '../config/constants';
 
 interface ThemeContextValue {
@@ -16,12 +16,18 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-// Owns the light/dark mode AND wraps antd's ConfigProvider + App so themed
-// components and message/notification context are available everywhere.
+// Owns light/dark mode. Sets <html data-theme> so variables.css overrides
+// apply, and derives the antd theme from those SAME CSS variables — so the
+// whole app (custom CSS + antd) is themed from one file (styles/variables.css).
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>(
     () => (localStorage.getItem(STORAGE_KEYS.themeMode) as ThemeMode) ?? 'light',
   );
+
+  // Set the attribute synchronously before the theme is read below.
+  if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('data-theme', mode);
+  }
 
   const toggle = () =>
     setMode((prev) => {
@@ -30,11 +36,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       return next;
     });
 
+  const themeConfig = useMemo(() => buildTheme(mode), [mode]);
   const value = useMemo(() => ({ mode, toggle }), [mode]);
 
   return (
     <ThemeContext.Provider value={value}>
-      <ConfigProvider theme={mode === 'dark' ? darkTheme : lightTheme}>
+      <ConfigProvider theme={themeConfig}>
         <AntdApp>{children}</AntdApp>
       </ConfigProvider>
     </ThemeContext.Provider>

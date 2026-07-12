@@ -1,45 +1,45 @@
 import { Tag } from 'antd';
 
-// Central color map for EVERY status enum in the system. Use this everywhere a
-// lifecycle/workflow status is shown — never hand-roll a colored string.
-const STATUS_COLORS: Record<string, string> = {
+// Maps every status enum in the system to a design-system CSS variable
+// (styles/variables.css). Change a color there and every badge updates.
+const STATUS_VAR: Record<string, string> = {
   // Asset
-  AVAILABLE: 'green',
-  ALLOCATED: 'blue',
-  RESERVED: 'gold',
-  UNDER_MAINTENANCE: 'orange',
-  LOST: 'red',
-  RETIRED: 'default',
-  DISPOSED: 'default',
+  AVAILABLE: '--af-status-available',
+  ALLOCATED: '--af-status-allocated',
+  RESERVED: '--af-status-reserved',
+  UNDER_MAINTENANCE: '--af-status-maintenance',
+  LOST: '--af-status-lost',
+  RETIRED: '--af-status-retired',
+  DISPOSED: '--af-status-disposed',
   // Allocation
-  ACTIVE: 'green',
-  RETURNED: 'blue',
-  OVERDUE: 'red',
-  // Transfer / Maintenance shared
-  REQUESTED: 'gold',
-  APPROVED: 'green',
-  REJECTED: 'red',
-  COMPLETED: 'blue',
-  PENDING: 'gold',
-  TECH_ASSIGNED: 'cyan',
-  IN_PROGRESS: 'processing',
-  RESOLVED: 'green',
+  ACTIVE: '--af-success',
+  RETURNED: '--af-info',
+  OVERDUE: '--af-danger',
+  // Transfer / Maintenance
+  REQUESTED: '--af-warning',
+  APPROVED: '--af-success',
+  REJECTED: '--af-danger',
+  COMPLETED: '--af-info',
+  PENDING: '--af-warning',
+  TECH_ASSIGNED: '--af-info',
+  IN_PROGRESS: '--af-primary',
+  RESOLVED: '--af-success',
   // Booking
-  UPCOMING: 'blue',
-  ONGOING: 'processing',
-  CANCELLED: 'default',
+  UPCOMING: '--af-info',
+  ONGOING: '--af-primary',
+  CANCELLED: '--af-neutral',
   // Audit
-  PLANNED: 'blue',
-  CLOSED: 'default',
-  VERIFIED: 'green',
-  MISSING: 'red',
-  DAMAGED: 'orange',
+  PLANNED: '--af-info',
+  CLOSED: '--af-neutral',
+  VERIFIED: '--af-success',
+  MISSING: '--af-danger',
+  DAMAGED: '--af-maintenance',
   // Entity / priority
-  INACTIVE: 'default',
-  LOW: 'default',
-  MEDIUM: 'blue',
-  HIGH: 'orange',
-  CRITICAL: 'red',
+  INACTIVE: '--af-neutral',
+  LOW: '--af-neutral',
+  MEDIUM: '--af-info',
+  HIGH: '--af-maintenance',
+  CRITICAL: '--af-danger',
 };
 
 export interface StatusTagProps {
@@ -48,5 +48,18 @@ export interface StatusTagProps {
 
 export function StatusTag({ status }: StatusTagProps) {
   if (!status) return null;
-  return <Tag color={STATUS_COLORS[status] ?? 'default'}>{status.replace(/_/g, ' ')}</Tag>;
+  const varName = STATUS_VAR[status] ?? '--af-neutral';
+  return (
+    <Tag
+      style={{
+        background: `var(${varName})`,
+        color: '#fff',
+        border: 'none',
+        borderRadius: 6,
+        fontWeight: 500,
+      }}
+    >
+      {status.replace(/_/g, ' ')}
+    </Tag>
+  );
 }

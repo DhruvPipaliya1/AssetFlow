@@ -1,13 +1,17 @@
+.af-sider {
+  border-inline-end: 1px solid var(--af-border);
+}
+
 .af-logo {
-  height: 40px;
-  margin: 16px;
+  height: 48px;
+  margin: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--af-primary);
   font-weight: 700;
   font-size: 18px;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   white-space: nowrap;
   overflow: hidden;
 }
@@ -20,4 +24,5 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  border-bottom: 1px solid var(--af-border);
 }

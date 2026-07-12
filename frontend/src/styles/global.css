@@ -1,3 +1,5 @@
+@import './variables.css';
+
 *,
 *::before,
 *::after {
@@ -16,6 +18,8 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
+  background: var(--af-bg);
+  color: var(--af-text-primary);
 }
 
 /* Thin, unobtrusive scrollbars */
@@ -24,6 +28,17 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(128, 128, 128, 0.4);
-  border-radius: 4px;
+  background: var(--af-text-disabled);
+  border-radius: var(--af-radius-sm);
+}
+
+/* Utility helpers backed by the design tokens */
+.af-muted {
+  color: var(--af-text-muted);
+}
+.af-surface {
+  background: var(--af-surface);
+  border: 1px solid var(--af-border);
+  border-radius: var(--af-radius);
+  box-shadow: var(--af-shadow);
 }

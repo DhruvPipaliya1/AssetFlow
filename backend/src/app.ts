@@ -1,6 +1,8 @@
 import express, { type Express, type Request, type Response } from 'express';
 import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
 import { SETTINGS } from './lib/settings.js';
+import { openapiSpec } from './lib/swagger.js';
 import { errorHandler } from './middleware/error.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 
@@ -14,6 +16,10 @@ export function createApp(): Express {
   app.get('/health', (_req: Request, res: Response) => {
     res.json({ status: 'ok', service: 'assetflow-backend', ts: new Date().toISOString() });
   });
+
+  // Interactive API docs (Swagger UI) + raw spec.
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, { customSiteTitle: 'AssetFlow API Docs' }));
+  app.get('/api/docs.json', (_req: Request, res: Response) => res.json(openapiSpec));
 
   // ── Domain modules (mount new routers here, ABOVE the error handler) ──
   app.use('/api/auth', authRouter);
