@@ -72,6 +72,9 @@ export const assetsService = {
     if (input.documents !== undefined) {
       data.documents = input.documents as unknown as Prisma.InputJsonValue;
     }
+    if (input.customFieldValues !== undefined) {
+      data.customFieldValues = input.customFieldValues as unknown as Prisma.InputJsonValue;
+    }
 
     const asset = await assetsRepo.create(data);
     emit({
@@ -108,6 +111,9 @@ export const assetsService = {
     };
     if (input.documents !== undefined) {
       data.documents = input.documents as unknown as Prisma.InputJsonValue;
+    }
+    if (input.customFieldValues !== undefined) {
+      data.customFieldValues = input.customFieldValues as unknown as Prisma.InputJsonValue;
     }
 
     const asset = await assetsRepo.update(id, data);

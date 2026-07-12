@@ -1,5 +1,6 @@
 import { Prisma, type Role } from '@prisma/client';
-import { hasPermission, PERMISSION } from './permissions.js';
+import { PERMISSION } from './permissions.js';
+import { hasPermission } from './rbac.js';
 
 // Dashboard/reports scope: Admin & Asset Manager see org-wide (ANALYTICS_VIEW_ALL);
 // a Department Head is confined to assets their department owns. assetWhere is

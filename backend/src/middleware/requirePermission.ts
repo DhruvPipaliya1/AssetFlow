@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
-import { hasPermission, type Permission } from '../lib/permissions.js';
+import type { Permission } from '../lib/permissions.js';
+import { hasPermission } from '../lib/rbac.js';
 import { forbidden, unauthorized } from '../lib/errors.js';
 
 // Guard a route by PERMISSION (not raw role). Use after authMiddleware.

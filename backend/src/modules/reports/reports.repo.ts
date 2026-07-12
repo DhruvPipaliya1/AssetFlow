@@ -36,10 +36,37 @@ export const reportsRepo = {
 
   departments: () => prisma.department.findMany({ select: { id: true, name: true } }),
 
-  // Non-cancelled booking start times (bucketed into an hour-of-day heatmap).
+  // Non-cancelled booking start times (bucketed into a day×hour heatmap).
   bookingStarts: (assetWhere: Prisma.AssetWhereInput) =>
     prisma.booking.findMany({
       where: { asset: assetWhere, status: { not: 'CANCELLED' } },
       select: { startTime: true },
+    }),
+
+  // Assets + their category, condition, age inputs and maintenance history — the
+  // inputs to the lifecycle-alert heuristics (due for maintenance / nearing
+  // retirement). Already-disposed assets are excluded (nothing to act on).
+  assetsForLifecycle: (assetWhere: Prisma.AssetWhereInput) =>
+    prisma.asset.findMany({
+      where: { ...assetWhere, status: { notIn: ['DISPOSED', 'RETIRED'] } },
+      select: {
+        assetTag: true,
+        name: true,
+        status: true,
+        condition: true,
+        acquisitionDate: true,
+        customFieldValues: true,
+        category: { select: { name: true } },
+        maintenance: { select: { createdAt: true }, orderBy: { createdAt: 'desc' } },
+      },
+      orderBy: { acquisitionDate: 'asc' },
+    }),
+
+  // Maintenance requests with their asset's category — aggregated by category
+  // in the service.
+  maintenanceWithCategory: (assetWhere: Prisma.AssetWhereInput) =>
+    prisma.maintenanceRequest.findMany({
+      where: { asset: assetWhere },
+      select: { asset: { select: { categoryId: true, category: { select: { name: true } } } } },
     }),
 };

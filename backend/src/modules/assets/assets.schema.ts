@@ -7,6 +7,15 @@ const documentSchema = z.object({
   url: z.string().url(),
 });
 
+// A photo may be a hosted URL or an inline image data URL (uploaded via the
+// browser without external blob storage).
+const photoSchema = z
+  .string()
+  .refine((v) => /^https?:\/\//.test(v) || /^data:image\//.test(v), 'Must be an image URL or upload');
+
+// Category-specific field values, keyed by AssetCategory.customFields[].key.
+const customFieldValuesSchema = z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]).nullable());
+
 // Registration body. assetTag is auto-generated (AF-####) and status starts at
 // AVAILABLE — neither is client-settable (Golden Invariant #5: status only
 // changes through the state machine via allocation/maintenance flows).
@@ -19,8 +28,9 @@ export const createAssetSchema = z.object({
   condition: z.string().min(1).optional(),
   location: z.string().min(1).optional(),
   isBookable: z.boolean().optional(),
-  photoUrl: z.string().url().optional(),
+  photoUrl: photoSchema.optional(),
   documents: z.array(documentSchema).optional(),
+  customFieldValues: customFieldValuesSchema.optional(),
   ownerDepartmentId: z.string().min(1).optional(),
 });
 
