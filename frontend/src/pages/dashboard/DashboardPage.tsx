@@ -1,4 +1,4 @@
-import { Row, Col, Alert } from 'antd';
+import { Row, Col, Alert, Button, Space, Card, Divider } from 'antd';
 import {
   LaptopOutlined,
   SwapOutlined,
@@ -7,24 +7,35 @@ import {
   ClockCircleOutlined,
   WarningOutlined,
   RetweetOutlined,
+  PlusOutlined,
+  ScheduleOutlined,
 } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { KpiCard } from '../../components/common';
+import { dashboardService } from '../../services/dashboard.service';
+import { apiErrorMessage } from '../../services/apiClient';
 import { useAuth } from '../../hooks/useAuth';
-
-// Placeholder dashboard — KPI tiles are wired to live data in step B9/F3.
-// Colors come from the design system KPI tokens (styles/variables.css).
-const KPIS = [
-  { title: 'Assets Available', icon: <LaptopOutlined />, color: 'var(--af-kpi-available)' },
-  { title: 'Assets Allocated', icon: <SwapOutlined />, color: 'var(--af-kpi-allocated)' },
-  { title: 'Maintenance Today', icon: <ToolOutlined />, color: 'var(--af-kpi-maintenance)' },
-  { title: 'Active Bookings', icon: <CalendarOutlined />, color: 'var(--af-kpi-bookings)' },
-  { title: 'Pending Transfers', icon: <RetweetOutlined />, color: 'var(--af-kpi-transfers)' },
-  { title: 'Upcoming Returns', icon: <ClockCircleOutlined />, color: 'var(--af-kpi-returns)' },
-  { title: 'Overdue Returns', icon: <WarningOutlined />, color: 'var(--af-kpi-overdue)' },
-];
+import { PERMISSION } from '../../types/permissions';
+import { PATHS } from '../../routes/paths';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, can } = useAuth();
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ['dashboard', 'kpis'],
+    queryFn: dashboardService.kpis,
+  });
+  const k = data?.kpis;
+
+  const tiles = [
+    { title: 'Assets Available', value: k?.available, icon: <LaptopOutlined />, color: 'var(--af-kpi-available)', to: PATHS.assets },
+    { title: 'Assets Allocated', value: k?.allocated, icon: <SwapOutlined />, color: 'var(--af-kpi-allocated)', to: PATHS.allocations },
+    { title: 'Maintenance Today', value: k?.maintenanceToday, icon: <ToolOutlined />, color: 'var(--af-kpi-maintenance)', to: PATHS.maintenance },
+    { title: 'Active Bookings', value: k?.activeBookings, icon: <CalendarOutlined />, color: 'var(--af-kpi-bookings)', to: PATHS.bookings },
+    { title: 'Pending Transfers', value: k?.pendingTransfers, icon: <RetweetOutlined />, color: 'var(--af-kpi-transfers)', to: PATHS.allocations },
+    { title: 'Upcoming Returns', value: k?.upcomingReturns, icon: <ClockCircleOutlined />, color: 'var(--af-kpi-returns)', to: PATHS.allocations },
+  ];
 
   return (
     <div>
@@ -32,15 +43,63 @@ export default function DashboardPage() {
         type="info"
         showIcon
         style={{ marginBottom: 24 }}
-        message={`Welcome, ${user?.name?.split(' ')[0] ?? 'there'} — live KPI data is wired once the backend dashboard module (B9) lands.`}
+        message={`Welcome back, ${user?.name?.split(' ')[0] ?? 'there'}`}
+        description={
+          data ? `Showing ${data.scope === 'ORG' ? 'organization-wide' : 'your department'} figures.` : undefined
+        }
       />
+
+      {isError && (
+        <Alert type="error" showIcon style={{ marginBottom: 24 }} message={apiErrorMessage(error)} />
+      )}
+
       <Row gutter={[16, 16]}>
-        {KPIS.map((k) => (
-          <Col key={k.title} xs={24} sm={12} lg={8} xl={4}>
-            <KpiCard title={k.title} value="—" prefix={k.icon} valueColor={k.color} />
+        {tiles.map((t) => (
+          <Col key={t.title} xs={24} sm={12} lg={8} xl={6}>
+            <KpiCard
+              title={t.title}
+              value={t.value ?? '—'}
+              prefix={t.icon}
+              loading={isLoading}
+              valueColor={t.color}
+              onClick={() => navigate(t.to)}
+            />
           </Col>
         ))}
+        {/* Overdue is called out separately (danger) per the brief. */}
+        <Col xs={24} sm={12} lg={8} xl={6}>
+          <KpiCard
+            title="Overdue Returns"
+            value={k?.overdueReturns ?? '—'}
+            prefix={<WarningOutlined />}
+            loading={isLoading}
+            valueColor="var(--af-danger)"
+            onClick={() => navigate(PATHS.allocations)}
+          />
+        </Col>
       </Row>
+
+      <Divider />
+
+      <Card title="Quick actions" size="small">
+        <Space wrap>
+          {can(PERMISSION.ASSET_REGISTER) && (
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(PATHS.assets)}>
+              Register asset
+            </Button>
+          )}
+          {can(PERMISSION.BOOKING_CREATE) && (
+            <Button icon={<ScheduleOutlined />} onClick={() => navigate(PATHS.bookings)}>
+              New booking
+            </Button>
+          )}
+          {can(PERMISSION.MAINTENANCE_RAISE) && (
+            <Button icon={<ToolOutlined />} onClick={() => navigate(PATHS.maintenance)}>
+              Raise maintenance
+            </Button>
+          )}
+        </Space>
+      </Card>
     </div>
   );
 }
